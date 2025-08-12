@@ -4,26 +4,64 @@ import { useEffect, useRef } from "react";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import { MapInfo } from "../types";
 
+// 네이버 맵 최소 타입 선언
+interface NaverMapsLatLng {
+  new (lat: number, lng: number): NaverMapsLatLngInstance;
+}
+
+type NaverMapsLatLngInstance = object;
+
+interface NaverMapsMapOptions {
+  center: NaverMapsLatLngInstance;
+  zoom: number;
+  zoomControl?: boolean;
+  zoomControlOptions?: {
+    position: string;
+  };
+}
+
+type NaverMapsMap = object;
+
+interface NaverMapsMarkerOptions {
+  position: NaverMapsLatLngInstance;
+  map: NaverMapsMap;
+  title?: string;
+}
+
+type NaverMapsMarker = object;
+
+interface NaverMapsInfoWindowOptions {
+  content: string;
+}
+
+interface NaverMapsInfoWindow {
+  open: (map: NaverMapsMap, marker: NaverMapsMarker) => void;
+  close: () => void;
+  getMap: () => NaverMapsMap | null | undefined;
+}
+
+interface NaverMapsEvent {
+  addListener: (target: unknown, event: string, callback: () => void) => void;
+}
+
+interface NaverMapsPosition {
+  TOP_RIGHT: string;
+}
+
+interface NaverMapsNamespace {
+  Map: new (element: HTMLElement, options: NaverMapsMapOptions) => NaverMapsMap;
+  Marker: new (options: NaverMapsMarkerOptions) => NaverMapsMarker;
+  InfoWindow: new (options: NaverMapsInfoWindowOptions) => NaverMapsInfoWindow;
+  LatLng: NaverMapsLatLng;
+  Event: NaverMapsEvent;
+  Position: NaverMapsPosition;
+}
+
 // Naver Maps API 타입 정의
 declare global {
   interface Window {
     naver: {
-      maps: {
-        Map: new (element: HTMLElement, options: any) => any;
-        Marker: new (options: any) => any;
-        InfoWindow: new (options: any) => any;
-        LatLng: new (lat: number, lng: number) => any;
-        Event: {
-          addListener: (
-            target: any,
-            event: string,
-            callback: () => void
-          ) => void;
-        };
-        Position: {
-          TOP_RIGHT: string;
-        };
-      };
+      maps: NaverMapsNamespace;
     };
   }
 }
@@ -57,7 +95,7 @@ export default function MapSection({ mapInfo }: MapSectionProps) {
       if (!mapRef.current || !window.naver) return;
 
       const location = new window.naver.maps.LatLng(latitude, longitude);
-      const mapOptions = {
+      const mapOptions: NaverMapsMapOptions = {
         center: location,
         zoom: 15,
         zoomControl: true,

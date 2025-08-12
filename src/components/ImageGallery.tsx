@@ -1,6 +1,7 @@
 "use client";
 
 import { GalleryImage } from "../types";
+import Image from "next/image";
 
 interface ImageGalleryProps {
   images: GalleryImage[];
@@ -56,10 +57,13 @@ export default function ImageGallery({ images, title }: ImageGalleryProps) {
             key={image.id}
             className="aspect-square overflow-hidden cursor-pointer relative group"
           >
-            <img
+            <Image
               src={image.url}
               alt={image.alt}
-              className="w-full h-full object-cover"
+              fill
+              sizes="(max-width: 768px) 50vw, 25vw"
+              className="object-cover"
+              priority={false}
             />
             <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-opacity duration-300"></div>
           </div>
