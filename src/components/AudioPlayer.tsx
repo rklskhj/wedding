@@ -49,16 +49,18 @@ export default function AudioPlayer({ audioSrc }: AudioPlayerProps) {
   if (!isMounted) return null;
 
   return (
-    <button
-      onClick={togglePlay}
-      className="fixed bottom-20 right-6 z-[60] bg-zinc-800 rounded-full p-3 shadow-lg"
-      aria-label={isPlaying ? "음악 끄기" : "음악 켜기"}
-    >
-      {isPlaying ? (
-        <FaVolumeUp className="text-white text-xl" />
-      ) : (
-        <FaVolumeMute className="text-gray-400 text-xl" />
-      )}
-    </button>
+    <div className="w-full flex justify-end">
+      <button
+        onClick={togglePlay}
+        className=" p-3"
+        aria-label={isPlaying ? "음악 끄기" : "음악 켜기"}
+      >
+        {isPlaying ? (
+          <FaVolumeUp className="text-white text-xl" />
+        ) : (
+          <FaVolumeMute className="text-gray-400 text-xl" />
+        )}
+      </button>
+    </div>
   );
 }

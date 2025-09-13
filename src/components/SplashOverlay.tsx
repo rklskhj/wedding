@@ -39,6 +39,7 @@ export default function SplashOverlay({
     fg?: string;
   } | null>(null);
   const [isBgReady, setIsBgReady] = useState(true);
+  const prevWasReverseRef = useRef<boolean>(false);
 
   const hasSlides = Array.isArray(slides) && slides.length > 0;
   const current = useMemo(() => {
@@ -61,6 +62,8 @@ export default function SplashOverlay({
         if (isLast) {
           onFinish?.();
         } else {
+          // 현재 프레임의 최종 방향(이전 방향)을 저장해, 이전 이미지가 순간적으로 좌표가 초기화되지 않도록 고정
+          prevWasReverseRef.current = isReverse;
           setPrevImages({ bg: current.bgImageSrc, fg: current.fgImageSrc });
           setIsReverse((idx) => !idx);
           setCurrentIndex((idx) => idx + 1);
@@ -100,7 +103,14 @@ export default function SplashOverlay({
             alt="splash background prev"
             className="pointer-events-none absolute inset-0 h-full w-full object-cover transition-opacity duration-500"
             draggable={false}
-            style={{ opacity: isBgReady ? 0 : 1, transform: "scale(1.2)" }}
+            style={{
+              opacity: isBgReady ? 0 : 1,
+              // 이전 프레임의 최종 위치를 유지해 점프 방지
+              transform: prevWasReverseRef.current
+                ? "translateX(-5%) scale(1.2)"
+                : "translateX(5%) scale(1.2)",
+              willChange: "transform, opacity",
+            }}
           />
         )}
         {/* 현재 프레임 (페이드인 + 좌/우 팬) */}
@@ -113,7 +123,14 @@ export default function SplashOverlay({
           } transition-opacity duration-500`}
           draggable={false}
           onLoad={() => setIsBgReady(true)}
-          style={{ opacity: prevImages?.bg ? (isBgReady ? 1 : 0) : 1 }}
+          style={{
+            opacity: prevImages?.bg ? (isBgReady ? 1 : 0) : 1,
+            // 초기 프레임에서 애니메이션 시작값을 맞춰 순간 점프 방지
+            transform: isReverse
+              ? "translateX(5%) scale(1.2)"
+              : "translateX(-5%) scale(1.2)",
+            willChange: "transform, opacity",
+          }}
         />
         {/* 어둡게 오버레이 */}
         <div className="absolute inset-0 bg-black/40" />

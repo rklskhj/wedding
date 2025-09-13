@@ -192,7 +192,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center">
-      <div className="w-full max-w-[448px] mx-auto bg-basic">
+      <div className="w-full max-w-[448px] mx-auto bg-black">
         {/* 헤더 섹션 */}
         <HeaderSection weddingInfo={weddingInfo} />
 
