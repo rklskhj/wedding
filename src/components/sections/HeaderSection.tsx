@@ -117,7 +117,7 @@ export default function HeaderSection({ weddingInfo }: HeaderSectionProps) {
               {/* 전경 이미지: 프레임 기준 퍼센트 이동 */}
               <motion.div className="absolute inset-0" style={{ y: imageY }}>
                 <Image
-                  src="/images/we.png"
+                  src="/images/we.webp"
                   alt="wedding"
                   fill
                   priority

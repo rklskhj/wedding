@@ -175,12 +175,12 @@ export default function Home() {
       <SplashOverlay
         slides={[
           {
-            bgImageSrc: "/images/gallery1.png",
+            bgImageSrc: "/images/gallery1.webp",
             // fgImageSrc: "/images/we_bg.png",
             durationMs: 1000,
           },
           {
-            bgImageSrc: "/images/gallery2.png",
+            bgImageSrc: "/images/gallery2.webp",
             // fgImageSrc: "/images/we_bg.png",
             durationMs: 1000,
           },

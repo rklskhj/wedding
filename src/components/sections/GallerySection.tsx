@@ -23,12 +23,12 @@ export default function GallerySection({ images, title }: GallerySectionProps) {
   const [touchMoveX, setTouchMoveX] = useState<number | null>(null);
   const MAX_GRID_ITEMS = 12;
 
-  // 기본 이미지: public/images/gallery1~12.png 사용
+  // 기본 이미지: public/images/gallery1~12.webp 사용
   const localImages: GalleryImage[] = Array.from({ length: 12 }, (_, i) => {
     const index = i + 1;
     return {
       id: String(index),
-      url: `/images/gallery${index}.png`,
+      url: `/images/gallery${index}.webp`,
       alt: `갤러리 이미지 ${index}`,
     };
   });
