@@ -15,6 +15,8 @@ export interface SplashOverlayProps {
   }>;
   /** 자동 종료까지 대기 시간(ms) */
   durationMs?: number;
+  /** 크로스페이드 시간(ms) */
+  crossfadeMs?: number;
   /** 스플래시 종료 콜백 */
   onFinish?: () => void;
 }
@@ -29,6 +31,7 @@ export default function SplashOverlay({
   fgImageSrc,
   slides,
   durationMs = 1800,
+  crossfadeMs = 700,
   onFinish,
 }: SplashOverlayProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -41,6 +44,7 @@ export default function SplashOverlay({
   const [isBgReady, setIsBgReady] = useState(false);
   const prevWasReverseRef = useRef<boolean>(false);
   const currentImgRef = useRef<HTMLImageElement | null>(null);
+  const loadedCacheRef = useRef<Record<string, boolean>>({});
 
   const startBgAnim = () => {
     if (isBgReady) return;
@@ -65,10 +69,14 @@ export default function SplashOverlay({
     };
   }, [hasSlides, slides, currentIndex, bgImageSrc, fgImageSrc, durationMs]);
 
+  // 슬라이드 진행 타이머: 이미지가 준비되어 애니메이션이 시작된 시점(isBgReady)부터 카운트
   useEffect(() => {
+    if (!isBgReady) return;
+
     if (timerRef.current) {
       clearTimeout(timerRef.current);
     }
+
     timerRef.current = setTimeout(() => {
       if (hasSlides) {
         const isLast = currentIndex >= (slides?.length ?? 1) - 1;
@@ -91,12 +99,16 @@ export default function SplashOverlay({
       if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, [
+    isBgReady,
     hasSlides,
     currentIndex,
     slides,
     current.durationMs,
     durationMs,
     onFinish,
+    isReverse,
+    current.bgImageSrc,
+    current.fgImageSrc,
   ]);
 
   // 현재 이미지가 이미 로드된 상태라면(캐시 등) 강제로 트랜지션 시작
@@ -106,6 +118,36 @@ export default function SplashOverlay({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current.bgImageSrc]);
+
+  // 다음 배경 프리로드(모바일 로딩 편차 완화)
+  useEffect(() => {
+    if (!hasSlides) return;
+    const nextIndex = currentIndex + 1;
+    if (!slides || nextIndex >= slides.length) return;
+    const nextSrc = slides[nextIndex]?.bgImageSrc;
+    if (!nextSrc || loadedCacheRef.current[nextSrc]) return;
+    const img = new Image();
+    img.src = nextSrc;
+    img.onload = () => {
+      loadedCacheRef.current[nextSrc] = true;
+    };
+    img.onerror = () => {
+      // 네트워크 에러 시 캐시하지 않음
+    };
+    // 브라우저가 지원하면 decode로 디코딩을 미리 완료
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const anyImg = img as any;
+    if (typeof anyImg.decode === "function") {
+      anyImg
+        .decode()
+        .then(() => {
+          loadedCacheRef.current[nextSrc] = true;
+        })
+        .catch(() => {
+          // decode 실패 시 onload로 대체
+        });
+    }
+  }, [hasSlides, slides, currentIndex]);
 
   return (
     <div
@@ -122,7 +164,7 @@ export default function SplashOverlay({
             key={`bg-prev-${currentIndex}`}
             src={prevImages.bg}
             alt="splash background prev"
-            className="pointer-events-none absolute inset-0 h-full w-full object-cover transition-opacity duration-500"
+            className="pointer-events-none absolute inset-0 h-full w-full object-cover"
             draggable={false}
             style={{
               opacity: isBgReady ? 0 : 1,
@@ -131,6 +173,7 @@ export default function SplashOverlay({
                 ? "translateX(-5%) scale(1.2)"
                 : "translateX(5%) scale(1.2)",
               willChange: "transform, opacity",
+              transition: `opacity ${crossfadeMs}ms ease-out`,
             }}
           />
         )}
@@ -139,7 +182,7 @@ export default function SplashOverlay({
           key={`bg-${currentIndex}`}
           src={current.bgImageSrc}
           alt="splash background"
-          className={`pointer-events-none absolute inset-0 h-full w-full object-cover splash-pan-zoom-transition transition-opacity duration-500`}
+          className={`pointer-events-none absolute inset-0 h-full w-full object-cover`}
           draggable={false}
           ref={currentImgRef}
           onLoad={startBgAnim}
@@ -157,6 +200,9 @@ export default function SplashOverlay({
               ? "translateX(5%) scale(1.2)"
               : "translateX(-5%) scale(1.2)",
             willChange: "transform, opacity",
+            transition: `transform ${
+              current.durationMs ?? durationMs
+            }ms ease-out, opacity ${crossfadeMs}ms ease-out`,
           }}
         />
         {/* 어둡게 오버레이 */}
