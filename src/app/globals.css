@@ -149,6 +149,11 @@ body {
   animation: panZoomRL 1.8s ease-out forwards;
 }
 
+/* 키프레임 대신 트랜지션으로 자연스럽게 팬/줌 제어 */
+.splash-pan-zoom-transition {
+  transition: transform 1.8s ease-out;
+}
+
 /* 스크롤바 스타일 */
 ::-webkit-scrollbar {
   width: 8px;

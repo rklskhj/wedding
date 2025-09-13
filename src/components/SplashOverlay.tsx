@@ -38,8 +38,21 @@ export default function SplashOverlay({
     bg?: string;
     fg?: string;
   } | null>(null);
-  const [isBgReady, setIsBgReady] = useState(true);
+  const [isBgReady, setIsBgReady] = useState(false);
   const prevWasReverseRef = useRef<boolean>(false);
+  const currentImgRef = useRef<HTMLImageElement | null>(null);
+
+  const startBgAnim = () => {
+    if (isBgReady) return;
+    requestAnimationFrame(() => {
+      // 강제 리플로우로 트랜지션 시작 보장
+      if (currentImgRef.current) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+        currentImgRef.current.offsetWidth;
+      }
+      requestAnimationFrame(() => setIsBgReady(true));
+    });
+  };
 
   const hasSlides = Array.isArray(slides) && slides.length > 0;
   const current = useMemo(() => {
@@ -86,6 +99,14 @@ export default function SplashOverlay({
     onFinish,
   ]);
 
+  // 현재 이미지가 이미 로드된 상태라면(캐시 등) 강제로 트랜지션 시작
+  useEffect(() => {
+    if (currentImgRef.current && currentImgRef.current.complete) {
+      startBgAnim();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current.bgImageSrc]);
+
   return (
     <div
       className="fixed inset-0 z-[9999] w-full h-full bg-black overflow-hidden"
@@ -118,15 +139,21 @@ export default function SplashOverlay({
           key={`bg-${currentIndex}`}
           src={current.bgImageSrc}
           alt="splash background"
-          className={`pointer-events-none absolute inset-0 h-full w-full object-cover ${
-            isReverse ? "splash-pan-zoom-reverse" : "splash-pan-zoom"
-          } transition-opacity duration-500`}
+          className={`pointer-events-none absolute inset-0 h-full w-full object-cover splash-pan-zoom-transition transition-opacity duration-500`}
           draggable={false}
-          onLoad={() => setIsBgReady(true)}
+          ref={currentImgRef}
+          onLoad={startBgAnim}
+          decoding="async"
+          loading="eager"
+          fetchPriority="high"
           style={{
             opacity: prevImages?.bg ? (isBgReady ? 1 : 0) : 1,
-            // 초기 프레임에서 애니메이션 시작값을 맞춰 순간 점프 방지
+            // 트랜지션 기반으로 시작 위치에서 끝 위치까지 자연 이동
             transform: isReverse
+              ? isBgReady
+                ? "translateX(-5%) scale(1.2)"
+                : "translateX(5%) scale(1.2)"
+              : isBgReady
               ? "translateX(5%) scale(1.2)"
               : "translateX(-5%) scale(1.2)",
             willChange: "transform, opacity",
