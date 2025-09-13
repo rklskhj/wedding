@@ -1,0 +1,44 @@
+# Create an SVG that recreates the provided Naver Map-style pin + bar icon as vector graphics.
+# Save it to /mnt/data/naver_map_pin.svg so the user can download it.
+
+svg = f'''<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Naver Map icon (vector)">
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <!-- Blue base bar -->
+  <rect x="120" y="372" width="272" height="56" rx="12" ry="12" fill="#2B7BFF"/>
+
+  <!-- Pin shadow (subtle) -->
+  <g filter="url(#shadow)">
+    <!-- Green pin (teardrop) -->
+    <path d="M256 64
+             C356 64 440 148 440 248
+             C440 340 374 420 296 468
+             C281 478 231 478 216 468
+             C138 420 72 340 72 248
+             C72 148 156 64 256 64Z"
+          fill="#03C75A"/>
+  </g>
+
+  <!-- Inner white circle on the pin -->
+  <circle cx="256" cy="232" r="86" fill="#FFFFFF"/>
+
+  <!-- Letter N constructed as vector paths (no font dependency) -->
+  <g transform="translate(206,176)" fill="#03C75A">
+    <!-- Left stem -->
+    <rect x="0" y="10" width="26" height="92" rx="6"/>
+    <!-- Right stem -->
+    <rect x="76" y="10" width="26" height="92" rx="6"/>
+    <!-- Diagonal -->
+    <path d="M26 10 L50 10 L76 102 L52 102 Z"/>
+  </g>
+</svg>
+'''
+with open('/mnt/data/naver_map_pin.svg', 'w', encoding='utf-8') as f:
+    f.write(svg)
+
+'/mnt/data/naver_map_pin.svg'

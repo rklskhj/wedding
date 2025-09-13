@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { MapInfo } from "../types";
 
 // 분리된 섹션 컴포넌트들 가져오기
@@ -12,6 +12,7 @@ import AccountSection from "../components/sections/AccountSection";
 import ShareSection from "../components/sections/ShareSection";
 import FooterSection from "../components/sections/FooterSection";
 import { ScrollTopButton } from "@/components/ScrollTopButton";
+import SplashOverlay from "@/components/SplashOverlay";
 
 export default function Home() {
   // 웨딩 정보
@@ -34,10 +35,10 @@ export default function Home() {
   };
 
   const mapInfo: MapInfo = {
-    title: "프로젝트 프로젝트 스튜디오",
-    address: "서울특별시 마포구 월드컵북로 15길23",
-    latitude: 37.5528, // 실제 위치로 변경 필요
-    longitude: 126.9108, // 실제 위치로 변경 필요
+    title: "더뉴컨벤션웨딩",
+    address: "서울특별시 강서구 공항대로36길 57",
+    latitude: 37.5563293, // 실제 위치로 변경 필요
+    longitude: 126.8369315, // 실제 위치로 변경 필요
   };
 
   // 계좌번호 정보
@@ -80,20 +81,52 @@ export default function Home() {
   // 로딩 상태 관리
   const [isLoading, setIsLoading] = useState(true);
   const [copySuccess, setCopySuccess] = useState(false);
-  const [, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-    // 초기 로딩 처리
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 1500);
-  }, []);
 
   // 계좌번호 복사 함수
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    alert("계좌번호가 복사되었습니다.");
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(
+        () => alert("계좌번호가 복사되었습니다."),
+        () => alert("복사에 실패했습니다. 다시 시도해주세요.")
+      );
+      return;
+    }
+    // fallback
+    const temp = document.createElement("textarea");
+    temp.value = text;
+    document.body.appendChild(temp);
+    temp.select();
+    try {
+      document.execCommand("copy");
+      alert("계좌번호가 복사되었습니다.");
+    } catch {
+      alert("복사에 실패했습니다. 다시 시도해주세요.");
+    } finally {
+      document.body.removeChild(temp);
+    }
+  };
+
+  // 주소 복사 함수 (MapSection 전용)
+  const copyAddressToClipboard = (text: string) => {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(
+        () => alert("주소가 복사되었습니다."),
+        () => alert("복사에 실패했습니다. 다시 시도해주세요.")
+      );
+      return;
+    }
+    const temp = document.createElement("textarea");
+    temp.value = text;
+    document.body.appendChild(temp);
+    temp.select();
+    try {
+      document.execCommand("copy");
+      alert("주소가 복사되었습니다.");
+    } catch {
+      alert("복사에 실패했습니다. 다시 시도해주세요.");
+    } finally {
+      document.body.removeChild(temp);
+    }
   };
 
   // 청첩장 URL 복사 함수
@@ -139,18 +172,27 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 min-h-screen w-full mx-auto flex items-center justify-center bg-black">
-        <div className="text-center">
-          <div className="inline-block w-16 h-16 border-4 border-gray-400 border-t-white rounded-full animate-spin"></div>
-          <p className="mt-4 text-lg text-gray-300">청첩장 로딩 중...</p>
-        </div>
-      </div>
+      <SplashOverlay
+        slides={[
+          {
+            bgImageSrc: "/images/gallery1.png",
+            // fgImageSrc: "/images/we_bg.png",
+            durationMs: 1000,
+          },
+          {
+            bgImageSrc: "/images/gallery2.png",
+            // fgImageSrc: "/images/we_bg.png",
+            durationMs: 1000,
+          },
+        ]}
+        onFinish={() => setIsLoading(false)}
+      />
     );
   }
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center">
-      <div className="w-full max-w-[448px] mx-auto bg-primary-400">
+      <div className="w-full max-w-[448px] mx-auto bg-basic">
         {/* 헤더 섹션 */}
         <HeaderSection weddingInfo={weddingInfo} />
 
@@ -158,7 +200,7 @@ export default function Home() {
         <GallerySection images={[]} title="" />
 
         {/* 장소 섹션 */}
-        <MapSection mapInfo={mapInfo} onCopyAddress={copyToClipboard} />
+        <MapSection mapInfo={mapInfo} onCopyAddress={copyAddressToClipboard} />
 
         {/* 교통 정보 섹션 */}
         <TransportSection transportInfo={transportInfo} />

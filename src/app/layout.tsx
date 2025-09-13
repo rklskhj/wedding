@@ -9,8 +9,9 @@ const notoSansKR = Noto_Sans_KR({
 });
 
 export const metadata: Metadata = {
-  title: "김혁진 & 신진솔 결혼식에 초대합니다",
-  description: "2025.11.09 SUN 02:00PM | 프로젝트 프로젝트 스튜디오",
+  title: "김혁진과 신진솔 결혼식에 초대합니다. 🤵🏻‍♂️👰🏻‍♀️",
+  description:
+    "우리 결혼해요! 2025.11.09 SUN 02:00PM | 강서 더뉴컨벤션 1층 르노브홀",
 };
 
 export default function RootLayout({
@@ -32,7 +33,7 @@ export default function RootLayout({
         {children}
         <Script
           src="https://t1.kakaocdn.net/kakao_js_sdk/2.5.0/kakao.min.js"
-          integrity="sha384-kYPsUbBPlktVQK6mUOcZUT20oitlPwAb5KhGI21BRdHIgQKFQtYwAzC+XwKYs0D"
+          integrity="sha384-kYPsUbBPlktXsY6/oNHSUDZoTX6+YI51f63jCPEIPFP09ttByAdxd2mEjKuhdqn4"
           crossOrigin="anonymous"
           strategy="lazyOnload"
         />

@@ -51,7 +51,7 @@ export default function AudioPlayer({ audioSrc }: AudioPlayerProps) {
   return (
     <button
       onClick={togglePlay}
-      className="absolute top-6 right-6 z-50 bg-zinc-800 rounded-full p-3 shadow-lg"
+      className="fixed bottom-20 right-6 z-[60] bg-zinc-800 rounded-full p-3 shadow-lg"
       aria-label={isPlaying ? "음악 끄기" : "음악 켜기"}
     >
       {isPlaying ? (

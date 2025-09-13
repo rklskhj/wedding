@@ -2,6 +2,7 @@
 
 import MapComponent from "../MapSection";
 import { MapInfo } from "../../types";
+import Image from "next/image";
 
 interface MapSectionProps {
   mapInfo: MapInfo;
@@ -13,21 +14,25 @@ export default function MapSection({
   onCopyAddress,
 }: MapSectionProps) {
   return (
-    <section className="py-16 px-4">
-      <h2 className="text-2xl font-medium text-center mb-8">오시는 길</h2>
-      <MapComponent mapInfo={mapInfo} />
-
-      <div className="mt-8 bg-zinc-900 p-4 rounded-lg">
-        <p className="font-medium text-center mb-4">{mapInfo.title}</p>
-        <p className="text-center mb-6">{mapInfo.address}</p>
-
-        <button
-          className="w-full py-3 bg-zinc-800 rounded-lg mb-4 hover:bg-zinc-700 transition"
-          onClick={() => onCopyAddress(mapInfo.address)}
-        >
-          주소 복사하기
-        </button>
+    <section className="">
+      {/* 달력 */}
+      <div className="relative w-full">
+        <Image
+          src="/images/calendar.png"
+          alt="wedding"
+          width={1200}
+          height={2000}
+          sizes="100vw"
+          className="w-full h-auto object-contain"
+        />
       </div>
+      <div className="flex justify-center items-center px-4 bg-white w-full h-full pb-8 pt-12">
+        <div className="flex justify-center items-center w-24 h-8 bg-primary text-2xl font-medium font-presentation text-white text-center ">
+          오시는 길
+        </div>
+      </div>
+
+      <MapComponent mapInfo={mapInfo} onCopyAddress={onCopyAddress} />
     </section>
   );
 }
