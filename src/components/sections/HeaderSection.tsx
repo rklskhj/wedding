@@ -41,7 +41,7 @@ export default function HeaderSection({ weddingInfo }: HeaderSectionProps) {
     scrollYProgress,
     // 초반(0~0.2) 급성장 → 0.4까지 완만, 이후 서서히 증가
     [0, 0.12, 0.4, 1],
-    ["28.2%", "36.2%", "46.2%", "56%"]
+    ["28.2%", "36.2%", "48.2%", "58%"]
   );
   // 텍스트: 스크롤 조금 내리면 숨기고, 맨 위로 올리면 다시 보이게
   const textOpacityBase = useTransform(
