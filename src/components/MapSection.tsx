@@ -183,44 +183,91 @@ export default function MapSection({
     );
   };
 
-  // 티맵 열기 (모바일: URL 스킴 우선, 데스크톱: OpenAPI 링크)
+  // 티맵 열기 (모바일: 앱 스킴/인텐트 시도 → 실패 시 웹 URL 폴백, 데스크톱: 웹 URL)
   const openTmap = () => {
+    const appKey = process.env.NEXT_PUBLIC_TMAP_APP_KEY;
+    const ua = navigator.userAgent || "";
+    const isAndroid = /Android/i.test(ua);
+    const isIOS = /iPhone|iPad|iPod/i.test(ua);
+
     const schemeUrl = `tmap://route?goalx=${longitude}&goaly=${latitude}&goalname=${encodeURIComponent(
       title
     )}`;
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const appKey = process.env.NEXT_PUBLIC_TMAP_APP_KEY;
+    const webUrl = appKey
+      ? `https://apis.openapi.sk.com/tmap/app/routes?appKey=${appKey}&name=${encodeURIComponent(
+          title
+        )}&lon=${longitude}&lat=${latitude}`
+      : "";
 
-    if (isMobile) {
-      // 모바일은 앱 스킴으로 직접 오픈 (앱 미설치 시 OS가 스토어 유도)
-      window.location.href = schemeUrl;
+    if (isAndroid) {
+      // Android: intent URI 사용 → 미설치 시 스토어/웹 폴백 동작, 추가로 800ms 후 웹 URL 폴백
+      const intentUrl = `intent://route?goalx=${longitude}&goaly=${latitude}&goalname=${encodeURIComponent(
+        title
+      )}#Intent;scheme=tmap;package=com.skt.tmap;end`;
+      if (webUrl) {
+        setTimeout(() => {
+          // 앱 전환이 실패한 환경(에뮬레이터/데스크톱 UA 등)에서 웹으로 폴백
+          try {
+            window.location.href = webUrl;
+          } catch {
+            // noop
+          }
+        }, 800);
+      }
+      try {
+        window.location.href = intentUrl;
+      } catch {
+        if (webUrl) {
+          window.location.href = webUrl;
+        }
+      }
       return;
     }
 
+    if (isIOS) {
+      // iOS: 스킴 시도 후 800ms 내 전환 없으면 웹 URL로 폴백
+      if (webUrl) {
+        setTimeout(() => {
+          try {
+            window.location.href = webUrl;
+          } catch {
+            // noop
+          }
+        }, 800);
+      }
+      try {
+        window.location.href = schemeUrl;
+      } catch {
+        if (webUrl) {
+          window.location.href = webUrl;
+        }
+      }
+      return;
+    }
+
+    // 데스크톱: 웹 URL로 열기 (새 탭)
     if (!appKey) {
       alert(
-        "Tmap AppKey가 설정되지 않았습니다. .env에 NEXT_PUBLIC_TMAP_APP_KEY를 추가하거나 모바일에서 열어주세요."
+        "Tmap AppKey가 설정되지 않았습니다. .env에 NEXT_PUBLIC_TMAP_APP_KEY를 추가한 뒤 다시 시도하세요."
       );
       return;
     }
-
-    const webUrl = `https://apis.openapi.sk.com/tmap/app/routes?appKey=${appKey}&name=${encodeURIComponent(
-      title
-    )}&lon=${longitude}&lat=${latitude}`;
     window.open(webUrl, "_blank");
   };
 
   return (
     <div className="bg-white">
       {/* 지도 */}
-      <div ref={mapRef} className="w-full h-80 mb-6 overflow-hidden"></div>
+      <div ref={mapRef} className="w-full h-80 overflow-hidden"></div>
 
-      <div className="mt-8 bg-zinc-900 p-4 rounded-lg">
-        <p className="font-medium text-center mb-4">{mapInfo.title}</p>
-        <p className="text-center mb-6">{mapInfo.address}</p>
+      <div className="pt-8 pb-4 px-4">
+        <p className="font-medium text-lg text-primary text-center mb-2 whitespace-pre-line">
+          {mapInfo.title}
+        </p>
+        <p className="text-center text-secondary mb-6">{mapInfo.address}</p>
 
         <button
-          className="w-full py-3 bg-zinc-800 rounded-lg mb-4 hover:bg-zinc-700 transition"
+          className="w-full py-3 bg-white font-medium border border-primary-500 text-primary-500 transition"
           onClick={() => onCopyAddress(mapInfo.address)}
         >
           주소 복사하기
@@ -228,7 +275,7 @@ export default function MapSection({
       </div>
 
       {/* 지도 앱 버튼 */}
-      <div className="grid grid-cols-3 gap-2 mt-8 px-4 pb-14">
+      <div className="grid grid-cols-3 gap-2 mt-4 px-4 pb-8">
         <button
           onClick={openNaverMap}
           className="flex items-center justify-center gap-1 bg-white p-2 text-primary border border-primary transition"
@@ -239,7 +286,7 @@ export default function MapSection({
             width={16}
             height={16}
           />
-          <span className="text-xs ">네이버 지도</span>
+          <span className="text-xs font-medium">네이버 지도</span>
         </button>
 
         <button
@@ -252,7 +299,7 @@ export default function MapSection({
             width={16}
             height={16}
           />
-          <span className="text-xs ">카카오 지도</span>
+          <span className="text-xs font-medium">카카오 지도</span>
         </button>
 
         <button
@@ -265,7 +312,7 @@ export default function MapSection({
             width={16}
             height={16}
           />
-          <span className="text-xs ">티맵</span>
+          <span className="text-xs font-medium">티맵</span>
         </button>
       </div>
     </div>

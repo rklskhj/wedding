@@ -29,19 +29,16 @@ export default function HeaderSection({ weddingInfo }: HeaderSectionProps) {
   const absVelocity = useTransform(scrollVelocity, (v: number) => Math.abs(v));
   // 스크롤 진행도(0→1)에 따라 전경 이미지만 위로 이동 – 비율 프레임 기준 퍼센트 이동
   const imageY = useTransform(scrollYProgress, [0, 1], ["3%", "-32%"]);
-  // 스크롤 진행도에 따라 하단 오버레이 높이를 점진적으로 확대/축소
-  // 그라데이션: 더 얇게(높이 축소), 더 진하게(색상은 아래 div 클래스에서 조정)
-  const gradientHeight = useTransform(
+  // 하단 오버레이: height 대신 transform(scaleY)로 GPU 가속
+  const gradientScale = useTransform(
     scrollYProgress,
     [0, 0.12, 0.4, 1],
-    ["14%", "24%", "36%", "62%"]
+    [0.226, 0.3871, 0.5806, 1]
   );
-  // 블랙 바: 초반에 빠르게 커지도록 멀티 포인트 매핑(가속 느낌)
-  const blackBarHeight = useTransform(
+  const blackBarScale = useTransform(
     scrollYProgress,
-    // 초반(0~0.2) 급성장 → 0.4까지 완만, 이후 서서히 증가
     [0, 0.12, 0.4, 1],
-    ["28.2%", "36.2%", "48.2%", "58%"]
+    [0.4862, 0.6241, 0.831, 1]
   );
   // 텍스트: 스크롤 조금 내리면 숨기고, 맨 위로 올리면 다시 보이게
   const textOpacityBase = useTransform(
@@ -89,7 +86,7 @@ export default function HeaderSection({ weddingInfo }: HeaderSectionProps) {
   // 컨테이너 variants는 제거하고 요소별로 개별 트리거 사용
   // 텍스트는 섹션 내 절대 배치로 고정(투명도 애니메이션 제거)
   return (
-    <section className="relative min-h-[200svh] bg-cover bg-center">
+    <section className="relative min-h-[200svh] bg-basic bg-cover bg-center">
       {/* 이미지: 특정 구간(h-[140vh]) 동안만 sticky 유지 후 release */}
       <div className="relative bg-basic" ref={stickyContainerRef}>
         <div className="sticky top-0 h-[100svh] w-full">
@@ -115,7 +112,10 @@ export default function HeaderSection({ weddingInfo }: HeaderSectionProps) {
               />
 
               {/* 전경 이미지: 프레임 기준 퍼센트 이동 */}
-              <motion.div className="absolute inset-0" style={{ y: imageY }}>
+              <motion.div
+                className="absolute inset-0"
+                style={{ y: imageY, willChange: "transform" }}
+              >
                 <Image
                   src="/images/we.webp"
                   alt="wedding"
@@ -128,12 +128,23 @@ export default function HeaderSection({ weddingInfo }: HeaderSectionProps) {
 
               {/* 하단 그라데이션/블록: 프레임 퍼센트 높이 */}
               <motion.div
-                className="pointer-events-none absolute left-0 right-0 z-30 bg-gradient-to-t from-black/95 via-black/70 to-transparent"
-                style={{ bottom: "28%", height: gradientHeight }}
+                className="pointer-events-none absolute left-0 right-0 z-30 bg-gradient-to-t from-secondary/95 via-secondary/70 to-transparent"
+                style={{
+                  bottom: "28%",
+                  height: "62%",
+                  scaleY: gradientScale,
+                  transformOrigin: "bottom",
+                  willChange: "transform",
+                }}
               />
               <motion.div
-                className="absolute left-0 right-0 bottom-0 z-30 bg-black"
-                style={{ height: blackBarHeight }}
+                className="absolute left-0 right-0 bottom-0 z-30 bg-secondary"
+                style={{
+                  height: "58%",
+                  scaleY: blackBarScale,
+                  transformOrigin: "bottom",
+                  willChange: "transform",
+                }}
               />
 
               {/* 신랑 신부 텍스트: 퍼센트 좌표 + clamp 폰트 */}
@@ -143,6 +154,7 @@ export default function HeaderSection({ weddingInfo }: HeaderSectionProps) {
                   left: "16%",
                   bottom: "48%",
                   opacity: textOpacitySpring,
+                  willChange: "opacity, transform",
                 }}
               >
                 <div className="text-white font-presentation leading-[1.05]">
@@ -160,9 +172,10 @@ export default function HeaderSection({ weddingInfo }: HeaderSectionProps) {
                   right: "10%",
                   bottom: "45%",
                   opacity: textOpacitySpring,
+                  willChange: "opacity, transform",
                 }}
               >
-                <div className="text-primary-500 font-presentation leading-[1.05]">
+                <div className="text-secondary font-presentation leading-[1.05]">
                   <span className="block font-thin text-[clamp(18px,5.0vw,24px)]">
                     신부
                   </span>
@@ -177,7 +190,7 @@ export default function HeaderSection({ weddingInfo }: HeaderSectionProps) {
       </div>
 
       {/* 이미지 구간 */}
-      <div className="relative bg-black h-full flex flex-col justify-start items-center gap-16 pb-20">
+      <div className="relative bg-secondary h-full flex flex-col justify-start items-center gap-16 pb-20">
         <motion.div
           className="flex flex-col items-center gap-10"
           variants={fadeUp}

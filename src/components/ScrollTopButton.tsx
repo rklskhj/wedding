@@ -1,14 +1,25 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { FaArrowUp } from "react-icons/fa";
 export const ScrollTopButton = () => {
   const [isVisible, setIsVisible] = useState(false);
 
+  const rAFRef = useRef<number | null>(null);
   useEffect(() => {
-    window.addEventListener("scroll", toggleVisibility);
+    const onScroll = () => {
+      if (rAFRef.current !== null) return;
+      rAFRef.current = window.requestAnimationFrame(() => {
+        toggleVisibility();
+        rAFRef.current = null;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
-      window.removeEventListener("scroll", toggleVisibility);
+      window.removeEventListener("scroll", onScroll as EventListener);
+      if (rAFRef.current) {
+        cancelAnimationFrame(rAFRef.current);
+      }
     };
   }, []);
 

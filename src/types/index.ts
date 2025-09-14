@@ -42,11 +42,37 @@ export interface WeddingInfo {
   };
 }
 
+// 교통 정보 타입 정의
+export interface TransportBadge {
+  label: string; // 표시 라벨 (예: "5호선", "간선")
+  color: string; // HEX 색상 (예: "#996CAC")
+}
+
+export interface TransportBusCategory {
+  label: string; // "간선", "지선", "공항버스"
+  color: string; // 카테고리 색상
+  routes: string[]; // 노선 번호 목록
+}
+
+export interface TransportInfo {
+  subway: {
+    title: string; // 안내 문구
+    badges: TransportBadge[];
+  };
+  bus: {
+    title: string; // 안내 문구
+    categories: TransportBusCategory[];
+  };
+  car: string[]; // 자가용 안내 문구 라인 배열
+}
+
 // 계좌 정보 타입 정의
 export interface AccountInfo {
+  icon: string;
   bank: string;
   number: string;
   holder: string;
+  kakaoPayUrl?: string;
 }
 
 // 카카오 공유 옵션 타입 정의

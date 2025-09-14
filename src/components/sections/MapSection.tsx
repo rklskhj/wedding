@@ -14,9 +14,9 @@ export default function MapSection({
   onCopyAddress,
 }: MapSectionProps) {
   return (
-    <section className="">
+    <section className="bg-white">
       {/* 달력 */}
-      <div className="relative w-full">
+      <div className="relative w-full py-8 bg-secondary">
         <Image
           src="/images/calendar.png"
           alt="wedding"

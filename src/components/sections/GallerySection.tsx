@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type React from "react";
 import { GalleryImage } from "../../types";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -19,8 +18,7 @@ interface GallerySectionProps {
 export default function GallerySection({ images, title }: GallerySectionProps) {
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
   const [modalImageError, setModalImageError] = useState<boolean>(false);
-  const [touchStartX, setTouchStartX] = useState<number | null>(null);
-  const [touchMoveX, setTouchMoveX] = useState<number | null>(null);
+
   const MAX_GRID_ITEMS = 12;
 
   // 기본 이미지: public/images/gallery1~12.webp 사용
@@ -77,28 +75,7 @@ export default function GallerySection({ images, title }: GallerySectionProps) {
     setSelectedImage(nextIndex);
   };
 
-  // 터치 스와이프 핸들러 (모바일)
-  const onTouchStart = (e: React.TouchEvent) => {
-    setTouchStartX(e.touches[0].clientX);
-    setTouchMoveX(null);
-  };
-
-  const onTouchMove = (e: React.TouchEvent) => {
-    setTouchMoveX(e.touches[0].clientX);
-  };
-
-  const onTouchEnd = () => {
-    if (touchStartX === null || touchMoveX === null) return;
-    const deltaX = touchMoveX - touchStartX;
-    const threshold = 50; // px
-    if (deltaX > threshold) {
-      goPrev();
-    } else if (deltaX < -threshold) {
-      goNext();
-    }
-    setTouchStartX(null);
-    setTouchMoveX(null);
-  };
+  // 모바일 스와이프 제거(요청사항)
 
   return (
     <section className="">
@@ -150,12 +127,7 @@ export default function GallerySection({ images, title }: GallerySectionProps) {
               onClick={(e) => e.stopPropagation()}
             >
               {/* 이미지 */}
-              <div
-                className="relative w-full h-[80vh] overflow-hidden"
-                onTouchStart={onTouchStart}
-                onTouchMove={onTouchMove}
-                onTouchEnd={onTouchEnd}
-              >
+              <div className="relative w-full h-[80vh] overflow-hidden">
                 <AnimatePresence initial={false} mode="wait">
                   <motion.div
                     key={gridImages[selectedImage].id}
@@ -177,20 +149,24 @@ export default function GallerySection({ images, title }: GallerySectionProps) {
                         onError={() => setModalImageError(true)}
                       />
                     ) : (
-                      <img
-                        src={gridImages[selectedImage].url}
-                        alt={gridImages[selectedImage].alt}
-                        className="max-h-[80vh] max-w-[92vw] w-auto h-auto object-contain"
-                        loading="eager"
-                        decoding="async"
-                      />
+                      <div className="flex items-center justify-center w-full h-full bg-black/10">
+                        <Image
+                          src={gridImages[selectedImage].url}
+                          alt={gridImages[selectedImage].alt}
+                          fill
+                          sizes="100vw"
+                          className="object-contain"
+                          priority
+                          unoptimized
+                        />
+                      </div>
                     )}
                   </motion.div>
                 </AnimatePresence>
               </div>
 
-              {/* 하단 좌우 버튼 */}
-              <div className="pointer-events-none absolute bottom-4 left-0 right-0 flex items-center justify-between px-4 select-none">
+              {/* 중앙 좌우 버튼 (이미지 중앙 정렬) */}
+              <div className="pointer-events-none absolute inset-0 left-0 right-0 flex items-center justify-between select-none">
                 <button
                   className="pointer-events-auto p-2 rounded-full  text-white transition"
                   onClick={(e) => {

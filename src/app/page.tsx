@@ -35,7 +35,7 @@ export default function Home() {
   };
 
   const mapInfo: MapInfo = {
-    title: "더뉴컨벤션웨딩",
+    title: "더뉴컨벤션웨딩, 1층 르노브홀 \n Tel. 1661-3303",
     address: "서울특별시 강서구 공항대로36길 57",
     latitude: 37.5563293, // 실제 위치로 변경 필요
     longitude: 126.8369315, // 실제 위치로 변경 필요
@@ -45,47 +45,88 @@ export default function Home() {
   const accounts = {
     groom: [
       {
-        bank: "농협",
-        number: "302 0679 9584 41",
-        holder: "안정환",
+        icon: "/images/icons/sh.svg",
+        bank: "신한은행",
+        number: "110-314-737600",
+        holder: "김혁진",
+        kakaoPayUrl: "https://qr.kakaopay.com/Ej8dKHJkp",
       },
       {
-        bank: "카카오뱅크",
-        number: "3333 05 0585629",
-        holder: "안재진",
+        icon: "/images/icons/hana.svg",
+        bank: "하나은행",
+        number: "118-18-18294-7",
+        holder: "김영복",
+      },
+      {
+        icon: "/images/icons/hana.svg",
+        bank: "하나은행",
+        number: "179-910-190-31307",
+        holder: "이미경",
       },
     ],
     bride: [
       {
-        bank: "농협",
-        number: "723100 52 034771",
-        holder: "권세광",
+        icon: "/images/icons/kb.svg",
+        bank: "국민은행",
+        number: "442802-01-330054",
+        holder: "신진솔",
+        kakaoPayUrl: "https://qr.kakaopay.com/FOteCSsKH",
       },
       {
-        bank: "카카오뱅크",
-        number: "3333 03 7286312",
-        holder: "권정은",
+        icon: "/images/icons/nh.svg",
+        bank: "농협은행",
+        number: "100093-56-061278",
+        holder: "이상금",
       },
     ],
   };
 
   // 교통 정보
   const transportInfo = {
-    bus: "🚌 버스\n문래역 정류장 하차\n간선: 641, 지선: 6211, 6625, 마을버스: 영등포12",
-    subway:
-      "🚊 지하철\n2호선 문래역 하차\n5번출구에서 전방 직진 300M\n4번출구(뒷쪽) 셔틀버스 5분 단위 운행",
-    coach:
-      "🚎 고속버스\n서울고속버스터미널에서 오는 법\n: 서울고속버스터미널 하차>9호선 탑승(동작역방면)>당산역하차>2호선 환승(영등포구청역 방면)>문래역 하차>4번 출구(뒷쪽) 셔틀버스 승차(5분 단위 운행)",
+    subway: {
+      title: "5호선 발산역 4번 출구 도보 약 3분 거리",
+      badges: [
+        {
+          label: "5호선",
+          color: "#996CAC",
+        },
+      ],
+    },
+    bus: {
+      title: "발산역 정류장 하차",
+      categories: [
+        {
+          label: "간선",
+          color: "#1E90FF", // 블루 계열
+          routes: ["601", "605", "661"],
+        },
+        {
+          label: "지선",
+          color: "#32CD32", // 그린 계열
+          routes: ["6627", "6642"],
+        },
+        {
+          label: "공항버스",
+          color: "#FFA500", // 오렌지 계열
+          routes: ["6003", "6008"],
+        },
+      ],
+    },
+    car: [
+      "강서구청 인근, 발산역 사거리 위치",
+      "웨딩홀 전용 주차장 및 이대서울병원주차장 완비 \n (하객 무료 주차 가능)",
+    ],
   };
 
   // 로딩 상태 관리
   const [isLoading, setIsLoading] = useState(true);
-  const [copySuccess, setCopySuccess] = useState(false);
 
   // 계좌번호 복사 함수
   const copyToClipboard = (text: string) => {
+    // 하이픈, 공백 등 모든 비숫자 문자 제거
+    const sanitized = text.replace(/[^0-9]/g, "");
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(
+      navigator.clipboard.writeText(sanitized).then(
         () => alert("계좌번호가 복사되었습니다."),
         () => alert("복사에 실패했습니다. 다시 시도해주세요.")
       );
@@ -93,7 +134,7 @@ export default function Home() {
     }
     // fallback
     const temp = document.createElement("textarea");
-    temp.value = text;
+    temp.value = sanitized;
     document.body.appendChild(temp);
     temp.select();
     try {
@@ -129,45 +170,69 @@ export default function Home() {
     }
   };
 
-  // 청첩장 URL 복사 함수
+  // 청첩장 URL 복사 함수 (alert 알림)
   const copyInvitationUrl = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setCopySuccess(true);
-    setTimeout(() => setCopySuccess(false), 2000);
+    const url = window.location.href;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(
+        () => alert("URL이 복사되었습니다!"),
+        () => alert("복사에 실패했습니다. 다시 시도해주세요.")
+      );
+      return;
+    }
+    const temp = document.createElement("textarea");
+    temp.value = url;
+    document.body.appendChild(temp);
+    temp.select();
+    try {
+      document.execCommand("copy");
+      alert("URL이 복사되었습니다!");
+    } catch {
+      alert("복사에 실패했습니다. 다시 시도해주세요.");
+    } finally {
+      document.body.removeChild(temp);
+    }
   };
 
   // 카카오톡 공유하기
   const shareKakao = () => {
-    if (window.Kakao) {
-      if (!window.Kakao.isInitialized()) {
-        // 카카오 SDK 초기화 필요 (실제 앱키로 변경 필요)
-        window.Kakao.init("YOUR_KAKAO_APP_KEY");
+    if (!window.Kakao) {
+      alert("카카오톡 SDK가 로드되지 않았습니다.");
+      return;
+    }
+    if (!window.Kakao.isInitialized()) {
+      const appKey = process.env.NEXT_PUBLIC_KAKAO_JS_KEY;
+      if (!appKey) {
+        alert("Kakao 앱 키가 설정되지 않았습니다.");
+        return;
       }
+      window.Kakao.init(appKey);
+    }
 
-      window.Kakao.Share.sendDefault({
-        objectType: "feed",
-        content: {
-          title: `${weddingInfo.groomName} ♥ ${weddingInfo.brideName} 결혼식에 초대합니다`,
-          description: `${weddingInfo.date} ${weddingInfo.day} ${weddingInfo.time} | ${weddingInfo.location}`,
-          imageUrl: "https://your-domain.com/images/main-bg.jpg",
+    const currentUrl = window.location.href;
+    const imageUrl = `${window.location.origin}/images/we.webp`;
+
+    window.Kakao.Share.sendDefault({
+      objectType: "feed",
+      content: {
+        title: `${weddingInfo.groomName} ♥ ${weddingInfo.brideName} 결혼식에 초대합니다`,
+        description: `${weddingInfo.date} ${weddingInfo.day} ${weddingInfo.time} | ${weddingInfo.location}`,
+        imageUrl,
+        link: {
+          mobileWebUrl: currentUrl,
+          webUrl: currentUrl,
+        },
+      },
+      buttons: [
+        {
+          title: "청첩장 보기",
           link: {
-            mobileWebUrl: window.location.href,
-            webUrl: window.location.href,
+            mobileWebUrl: currentUrl,
+            webUrl: currentUrl,
           },
         },
-        buttons: [
-          {
-            title: "청첩장 보기",
-            link: {
-              mobileWebUrl: window.location.href,
-              webUrl: window.location.href,
-            },
-          },
-        ],
-      });
-    } else {
-      alert("카카오톡 SDK가 로드되지 않았습니다.");
-    }
+      ],
+    });
   };
 
   if (isLoading) {
@@ -176,23 +241,22 @@ export default function Home() {
         slides={[
           {
             bgImageSrc: "/images/gallery1.webp",
-            // fgImageSrc: "/images/we_bg.png",
-            durationMs: 1000,
+            durationMs: 1800,
           },
           {
             bgImageSrc: "/images/gallery2.webp",
-            // fgImageSrc: "/images/we_bg.png",
-            durationMs: 1000,
+            durationMs: 1800,
           },
         ]}
+        crossfadeMs={800}
         onFinish={() => setIsLoading(false)}
       />
     );
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center">
-      <div className="w-full max-w-[448px] mx-auto bg-black">
+    <div className="min-h-screen bg-white text-white flex flex-col items-center">
+      <div className="w-full max-w-[390px] mx-auto bg-white">
         {/* 헤더 섹션 */}
         <HeaderSection weddingInfo={weddingInfo} />
 
@@ -209,11 +273,7 @@ export default function Home() {
         <AccountSection accounts={accounts} onCopy={copyToClipboard} />
 
         {/* 공유하기 섹션 */}
-        <ShareSection
-          onShareKakao={shareKakao}
-          onCopyUrl={copyInvitationUrl}
-          copySuccess={copySuccess}
-        />
+        <ShareSection onShareKakao={shareKakao} onCopyUrl={copyInvitationUrl} />
         {/* 스크롤 탑 버튼 */}
         <ScrollTopButton />
         {/* 푸터 */}

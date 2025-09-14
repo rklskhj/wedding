@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -17,6 +18,10 @@ export interface SplashOverlayProps {
   durationMs?: number;
   /** 크로스페이드 시간(ms) */
   crossfadeMs?: number;
+  /** 좌우 가림(거터) 픽셀 값. 이미지 가장자리 노출 방지 */
+  gutterPx?: number;
+  /** 어두운 오버레이 불투명도 (0~1). 기본 0 */
+  overlayOpacity?: number;
   /** 스플래시 종료 콜백 */
   onFinish?: () => void;
 }
@@ -32,6 +37,8 @@ export default function SplashOverlay({
   slides,
   durationMs = 1800,
   crossfadeMs = 700,
+  gutterPx = 12,
+  overlayOpacity = 0.4,
   onFinish,
 }: SplashOverlayProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -156,90 +163,101 @@ export default function SplashOverlay({
       aria-label="오프닝 스플래시"
       onClick={() => onFinish?.()}
     >
-      {/* 배경 이미지 (천천히 확대) */}
-      <div className="absolute inset-0">
-        {/* 이전 프레임 (페이드아웃) */}
-        {prevImages?.bg && (
+      {/* 모바일 프레임(stage): PC에서도 모바일 폭으로 중앙 정렬 */}
+      <div className="absolute inset-0 flex items-stretch justify-center">
+        <div
+          className="relative h-full w-full max-w-[390px] overflow-hidden"
+          style={{ paddingLeft: gutterPx, paddingRight: gutterPx }}
+        >
+          {/* 배경 이미지 (천천히 확대) */}
+          {/* 이전 프레임 (페이드아웃) */}
+          {prevImages?.bg && (
+            <img
+              key={`bg-prev-${currentIndex}`}
+              src={prevImages.bg}
+              alt="splash background prev"
+              className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+              draggable={false}
+              style={{
+                opacity: isBgReady ? 0 : 1,
+                // 이전 프레임의 최종 위치를 유지해 점프 방지
+                transform: prevWasReverseRef.current
+                  ? "translateX(-5%) scale(1.2)"
+                  : "translateX(5%) scale(1.2)",
+                willChange: "transform, opacity",
+                transition: `opacity ${crossfadeMs}ms ease-out`,
+              }}
+            />
+          )}
+          {/* 현재 프레임 (페이드인 + 좌/우 팬) */}
           <img
-            key={`bg-prev-${currentIndex}`}
-            src={prevImages.bg}
-            alt="splash background prev"
-            className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+            key={`bg-${currentIndex}`}
+            src={current.bgImageSrc}
+            alt="splash background"
+            className={`pointer-events-none absolute inset-0 h-full w-full object-cover`}
             draggable={false}
+            ref={currentImgRef}
+            onLoad={startBgAnim}
+            decoding="async"
+            loading="eager"
+            fetchPriority="high"
             style={{
-              opacity: isBgReady ? 0 : 1,
-              // 이전 프레임의 최종 위치를 유지해 점프 방지
-              transform: prevWasReverseRef.current
-                ? "translateX(-5%) scale(1.2)"
-                : "translateX(5%) scale(1.2)",
+              opacity: prevImages?.bg ? (isBgReady ? 1 : 0) : 1,
+              // 트랜지션 기반으로 시작 위치에서 끝 위치까지 자연 이동
+              transform: isReverse
+                ? isBgReady
+                  ? "translateX(-5%) scale(1.2)"
+                  : "translateX(5%) scale(1.2)"
+                : isBgReady
+                ? "translateX(5%) scale(1.2)"
+                : "translateX(-5%) scale(1.2)",
               willChange: "transform, opacity",
-              transition: `opacity ${crossfadeMs}ms ease-out`,
+              transition: `transform ${
+                current.durationMs ?? durationMs
+              }ms ease-out, opacity ${crossfadeMs}ms ease-out`,
             }}
           />
-        )}
-        {/* 현재 프레임 (페이드인 + 좌/우 팬) */}
-        <img
-          key={`bg-${currentIndex}`}
-          src={current.bgImageSrc}
-          alt="splash background"
-          className={`pointer-events-none absolute inset-0 h-full w-full object-cover`}
-          draggable={false}
-          ref={currentImgRef}
-          onLoad={startBgAnim}
-          decoding="async"
-          loading="eager"
-          fetchPriority="high"
-          style={{
-            opacity: prevImages?.bg ? (isBgReady ? 1 : 0) : 1,
-            // 트랜지션 기반으로 시작 위치에서 끝 위치까지 자연 이동
-            transform: isReverse
-              ? isBgReady
-                ? "translateX(-5%) scale(1.2)"
-                : "translateX(5%) scale(1.2)"
-              : isBgReady
-              ? "translateX(5%) scale(1.2)"
-              : "translateX(-5%) scale(1.2)",
-            willChange: "transform, opacity",
-            transition: `transform ${
-              current.durationMs ?? durationMs
-            }ms ease-out, opacity ${crossfadeMs}ms ease-out`,
-          }}
-        />
-        {/* 어둡게 오버레이 */}
-        <div className="absolute inset-0 bg-black/40" />
-      </div>
-
-      {/* 전경 텍스트/로고 이미지 (페이드 인) */}
-      <div className="relative z-10 flex h-full w-full items-center justify-center p-8">
-        {current.fgImageSrc && (
-          <>
-            {/* 이전 프레임 (페이드아웃) */}
-            {prevImages?.fg && (
-              <img
-                key={`fg-prev-${currentIndex}`}
-                src={prevImages.fg}
-                alt="splash foreground prev"
-                className="absolute pointer-events-none max-w-[88%] h-auto opacity-0 transition-opacity duration-500"
-                draggable={false}
-              />
-            )}
-            {/* 현재 프레임 (페이드인) */}
-            <img
-              key={`fg-${currentIndex}`}
-              src={current.fgImageSrc}
-              alt="splash foreground"
-              className="pointer-events-none max-w-[88%] h-auto opacity-100 transition-opacity duration-500"
-              draggable={false}
+          {/* 어둡게 오버레이 */}
+          {overlayOpacity > 0 && (
+            <div
+              className="absolute inset-0"
+              style={{ background: `rgba(0,0,0,${overlayOpacity})` }}
             />
-          </>
-        )}
-      </div>
+          )}
 
-      {/* 하단 안내 텍스트 */}
-      <div className="absolute bottom-8 left-0 right-0 z-10 flex items-center justify-center">
-        <p className="text-xs text-white/70 tracking-wider">
-          화면을 탭하면 바로 입장합니다
-        </p>
+          {/* 전경 텍스트/로고 이미지 (페이드 인) */}
+          <div className="relative z-10 flex h-full w-full items-center justify-center p-8">
+            {current.fgImageSrc && (
+              <>
+                {/* 이전 프레임 (페이드아웃) */}
+                {prevImages?.fg && (
+                  <img
+                    key={`fg-prev-${currentIndex}`}
+                    src={prevImages.fg}
+                    alt="splash foreground prev"
+                    className="absolute pointer-events-none max-w-[88%] h-auto opacity-0 transition-opacity duration-500"
+                    draggable={false}
+                  />
+                )}
+                {/* 현재 프레임 (페이드인) */}
+                <img
+                  key={`fg-${currentIndex}`}
+                  src={current.fgImageSrc}
+                  alt="splash foreground"
+                  className="pointer-events-none max-w-[88%] h-auto opacity-100 transition-opacity duration-500"
+                  draggable={false}
+                />
+              </>
+            )}
+          </div>
+
+          {/* 하단 안내 텍스트 (모바일 프레임 기준) */}
+          <div className="absolute bottom-6 left-0 right-0 z-10 flex items-center justify-center">
+            <p className="text-xs text-white/70 tracking-wider">
+              화면을 탭하면 바로 입장합니다
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

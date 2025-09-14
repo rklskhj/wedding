@@ -26,7 +26,7 @@ export default function RootLayout({
           name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
         />
-        <meta name="theme-color" content="#000000" />
+        <meta name="theme-color" content="#ffffff" />
         <link rel="icon" href="/favicon.ico" />
       </head>
       <body className={notoSansKR.className}>

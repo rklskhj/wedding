@@ -76,10 +76,11 @@
 }
 
 :root {
-  --foreground-rgb: 255, 255, 255;
-  --background-rgb: 0, 0, 0;
+  --foreground-rgb: 17, 17, 17; /* 기본 텍스트 톤 */
+  --background-rgb: 255, 255, 255; /* 바운스 여백이 흰색으로 보이도록 */
 }
 
+html,
 body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-rgb));
@@ -177,4 +178,21 @@ html,
 body {
   max-width: 100%;
   overflow-x: hidden;
+}
+
+/* 퍼포먼스 유틸 */
+.will-change-transform {
+  will-change: transform;
+}
+.gpu-transform {
+  transform: translateZ(0);
+}
+
+/* 수평 스크롤바 숨김 유틸 */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
 }
