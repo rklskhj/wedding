@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
 import { useEffect, useState } from "react";
 import type { Swiper as SwiperType } from "swiper";
@@ -122,6 +123,14 @@ export default function AccountSection({
                 {/* 은행 + 계좌 + 복사 아이콘 한줄 */}
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-1 text-secondary">
+                    <Image
+                      src={account.icon}
+                      alt={account.bank}
+                      width={24}
+                      height={24}
+                      className="w-6 h-6"
+                      unoptimized
+                    />
                     <span className="text-lg">{account.bank}</span>
                   </div>
                   <div className="flex items-center gap-1 text-secondary">
@@ -135,7 +144,7 @@ export default function AccountSection({
                       className="p-1 rounded hover:bg-zinc-100 active:opacity-80"
                       title="복사"
                     >
-                      <Image
+                      <img
                         src="/images/icons/copy.svg"
                         alt="복사"
                         width={24}
@@ -155,7 +164,7 @@ export default function AccountSection({
                   rel="noopener noreferrer"
                   className="w-full py-2 gap-2 rounded-lg text-sm text-secondary bg-[#f6cc00] hover:brightness-95 transition flex items-center justify-center"
                 >
-                  <Image
+                  <img
                     src="/images/icons/kakao.svg"
                     alt="카카오페이"
                     width={24}
