@@ -92,7 +92,7 @@ export default function HeaderSection({ weddingInfo }: HeaderSectionProps) {
         <div className="sticky top-0 h-[100svh] w-full">
           {/* 비율 프레임: 390x844 기준 */}
           {/* 배경 음악 플레이어 */}
-          <AudioPlayer audioSrc="/audio/summer.mp3" />
+          <AudioPlayer audioSrc="/audio/bgm.mp3" />
           <div className="relative mx-auto w-full max-w-[430px] aspect-[390/844]">
             <motion.div
               initial={{ opacity: 0 }}

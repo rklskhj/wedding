@@ -26,13 +26,19 @@ type NaverMapsSizeInstance = object;
 interface NaverMapsMapOptions {
   center: NaverMapsLatLngInstance;
   zoom: number;
+  minZoom?: number;
+  maxZoom?: number;
   zoomControl?: boolean;
   zoomControlOptions?: {
     position: string;
   };
 }
 
-type NaverMapsMap = object;
+type NaverMapsMap = {
+  getZoom: () => number;
+  setZoom: (zoom: number) => void;
+  setOptions: (options: Partial<NaverMapsMapOptions>) => void;
+};
 
 interface NaverMapsMarkerOptions {
   position: NaverMapsLatLngInstance;
@@ -134,6 +140,8 @@ export default function MapSection({
       const mapOptions: NaverMapsMapOptions = {
         center: location,
         zoom: 18,
+        minZoom: 16, // 약 100m 수준으로 제한 (줌 아웃 한계)
+        maxZoom: 18, // 약 30m 수준으로 제한 (줌 인 한계)
         zoomControl: true,
         zoomControlOptions: {
           position: window.naver.maps.Position.TOP_RIGHT,
@@ -141,6 +149,8 @@ export default function MapSection({
       };
 
       const map = new window.naver.maps.Map(mapRef.current, mapOptions);
+      // 옵션 기반으로만 제한 적용 (컨트롤 비활성화가 자연스럽게 동작)
+      map.setOptions({ minZoom: 16, maxZoom: 18 });
 
       // 커스텀 마커(SVG)
       const markerSvg = encodeURIComponent(

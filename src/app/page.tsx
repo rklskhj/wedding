@@ -7,10 +7,12 @@ import { MapInfo } from "../types";
 import HeaderSection from "../components/sections/HeaderSection";
 import GallerySection from "../components/sections/GallerySection";
 import MapSection from "../components/sections/MapSection";
+import CalendarSection from "../components/sections/CalendarSection";
 import TransportSection from "../components/sections/TransportSection";
 import AccountSection from "../components/sections/AccountSection";
 import ShareSection from "../components/sections/ShareSection";
 import FooterSection from "../components/sections/FooterSection";
+import CountdownSection from "../components/sections/CountdownSection";
 import { ScrollTopButton } from "@/components/ScrollTopButton";
 import SplashOverlay from "@/components/SplashOverlay";
 
@@ -263,6 +265,13 @@ export default function Home() {
         {/* 갤러리 섹션 */}
         <GallerySection images={[]} title="" />
 
+        {/* 달력 섹션 */}
+        <CalendarSection />
+        {/* 카운트다운 섹션 */}
+        <CountdownSection
+          targetDate="2025-11-09T14:00:00+09:00"
+          coupleName="혁진, 진솔"
+        />
         {/* 장소 섹션 */}
         <MapSection mapInfo={mapInfo} onCopyAddress={copyAddressToClipboard} />
 
