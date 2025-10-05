@@ -232,7 +232,7 @@ export default function Home() {
     }
 
     const currentUrl = window.location.href;
-    const imageUrl = `https://res.cloudinary.com/dckkqaxqm/image/upload/fl_preserve_transparency/v1759647859/we2_optimized_zl2dpm.jpg?_s=public-apps`;
+    const imageUrl = `https://res.cloudinary.com/dckkqaxqm/image/upload/fl_preserve_transparency/v1759648113/we_so6um5.jpg?_s=public-apps`;
 
     window.Kakao.Share.sendDefault({
       objectType: "feed",
