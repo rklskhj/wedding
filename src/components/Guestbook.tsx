@@ -254,9 +254,9 @@ export default function Guestbook() {
                 <p className="h-full px-3 py-2 text-[12px] text-[#333] leading-[1.7] line-clamp-4">
                   {entry.content}
                 </p>
-                <div className="bottom px-3 pb-2 text-center">
+                <div className="bottom px-3 pb-2 text-end">
                   <span className="from text-[12px] text-secondary">
-                    - {entry.name} -
+                    from. {entry.name}
                   </span>
                   <div className="mt-2 flex items-center justify-between text-[10px] text-gray-400">
                     <span>

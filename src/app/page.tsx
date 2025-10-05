@@ -26,8 +26,8 @@ export default function Home() {
     date: "2025.11.09",
     day: "SUN",
     time: "02:00PM",
-    location: "프로젝트 프로젝트 스튜디오",
-    address: "서울특별시 마포구 월드컵북로 15길23",
+    location: "by. HJ & JS",
+    address: "서울특별시 강서구 공항대로36길 57",
     groomParents: {
       father: "김혁진",
       mother: "",
