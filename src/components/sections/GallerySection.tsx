@@ -19,10 +19,10 @@ export default function GallerySection({ images, title }: GallerySectionProps) {
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
   const [modalImageError, setModalImageError] = useState<boolean>(false);
 
-  const MAX_GRID_ITEMS = 12;
+  const MAX_GRID_ITEMS = 15;
 
   // 기본 이미지: public/images/gallery1~12.webp 사용
-  const localImages: GalleryImage[] = Array.from({ length: 12 }, (_, i) => {
+  const localImages: GalleryImage[] = Array.from({ length: 15 }, (_, i) => {
     const index = i + 1;
     return {
       id: String(index),
