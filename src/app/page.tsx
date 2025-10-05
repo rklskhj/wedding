@@ -29,12 +29,12 @@ export default function Home() {
     location: "by. HJ & JS",
     address: "서울특별시 강서구 공항대로36길 57",
     groomParents: {
-      father: "김혁진",
-      mother: "",
+      father: "김영복",
+      mother: "이미경",
     },
     brideParents: {
-      father: "신진솔",
-      mother: "",
+      father: "",
+      mother: "이상금",
     },
   };
 
@@ -237,7 +237,7 @@ export default function Home() {
     window.Kakao.Share.sendDefault({
       objectType: "feed",
       content: {
-        title: `${weddingInfo.groomName} ♥ ${weddingInfo.brideName} 결혼식에 초대합니다`,
+        title: `혁진 ♥ 진솔 결혼식에 초대합니다`,
         description: `${weddingInfo.date} ${weddingInfo.day} ${weddingInfo.time} | ${weddingInfo.location}`,
         imageUrl,
         link: {
