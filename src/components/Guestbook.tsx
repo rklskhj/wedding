@@ -1,6 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { FreeMode } from "swiper/modules";
+import "swiper/css";
 import {
   collection,
   addDoc,
@@ -13,19 +16,62 @@ import {
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { GuestbookEntry } from "../types";
+import { FaPencilAlt } from "react-icons/fa";
+
+// 브라우저 Web Crypto를 사용해 비밀번호를 SHA-256으로 해시합니다.
+async function hashString(input: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(input);
+  const hashBuffer = await window.crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
 
 export default function Guestbook() {
   const [entries, setEntries] = useState<GuestbookEntry[]>([]);
   const [name, setName] = useState("");
-  const [contact, setContact] = useState("");
+  // 연락처는 비활성화
   const [content, setContent] = useState("");
   const [password, setPassword] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState("");
   const [verifyPassword, setVerifyPassword] = useState("");
-  const [verifyContact, setVerifyContact] = useState("");
+  // 연락처 검증 비활성화
   const [showVerify, setShowVerify] = useState(false);
   const [actionType, setActionType] = useState<"delete" | "edit">("delete");
+  const [showWrite, setShowWrite] = useState(false);
+  const [showAllEntries, setShowAllEntries] = useState(false);
+
+  // 오버레이 열림 시 전체 스크롤 잠금 및 닫힐 때 복원 (useRef로 안정화)
+  const scrollYRef = useRef(0);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const shouldLock = showVerify || showWrite || showAllEntries;
+    if (shouldLock) {
+      scrollYRef.current = window.scrollY;
+      document.documentElement.style.overflow = "hidden";
+      document.body.style.overflow = "hidden";
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollYRef.current}px`;
+      document.body.style.width = "100%";
+    } else {
+      const y = scrollYRef.current;
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+      window.scrollTo(0, y);
+    }
+    return () => {
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+    };
+  }, [showVerify, showWrite, showAllEntries]);
 
   // 방명록 불러오기
   useEffect(() => {
@@ -47,43 +93,49 @@ export default function Guestbook() {
     fetchEntries();
   }, []);
 
-  // 방명록 추가
+  // 방명록 추가/수정
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!name || !contact || !content || !password) {
+    if (!name || !content || (!isEditing && !password)) {
       alert("모든 필드를 입력해주세요.");
       return;
     }
 
     try {
       if (isEditing && currentId) {
-        // 수정
+        // 수정: 비밀번호가 비어있으면 기존 해시 유지, 입력되면 새 해시 저장
+        const existing = entries.find((e) => e.id === currentId);
+        const newPasswordHash = password
+          ? await hashString(password)
+          : undefined;
+        const passwordToSave = newPasswordHash ?? existing?.password ?? "";
+
         await updateDoc(doc(db, "guestbook", currentId), {
           name,
-          contact,
           content,
-          password,
+          password: passwordToSave,
           updatedAt: Date.now(),
         });
       } else {
         // 새 항목 추가
+        const passwordHash = await hashString(password);
         await addDoc(collection(db, "guestbook"), {
           name,
-          contact,
           content,
-          password,
+          password: passwordHash,
           createdAt: Date.now(),
         });
       }
 
       // 폼 초기화
       setName("");
-      setContact("");
+
       setContent("");
       setPassword("");
       setIsEditing(false);
       setCurrentId("");
+      setShowWrite(false);
 
       // 목록 새로고침
       const q = query(
@@ -118,193 +170,192 @@ export default function Guestbook() {
     setShowVerify(true);
   };
 
-  // 비밀번호 및 연락처 확인
+  // 비밀번호 확인
   const verifyUser = async () => {
     const entry = entries.find((e) => e.id === currentId);
 
     if (!entry) return;
 
-    if (entry.password === verifyPassword && entry.contact === verifyContact) {
+    const verifyHash = await hashString(verifyPassword);
+    if (entry.password === verifyHash) {
       if (actionType === "delete") {
         try {
           await deleteDoc(doc(db, "guestbook", currentId));
           setEntries(entries.filter((e) => e.id !== currentId));
           setShowVerify(false);
           setVerifyPassword("");
-          setVerifyContact("");
         } catch (error) {
           console.error("Error deleting document: ", error);
           alert("삭제 중 오류가 발생했습니다.");
         }
       } else if (actionType === "edit") {
         setName(entry.name);
-        setContact(entry.contact);
         setContent(entry.content);
-        setPassword(entry.password);
+        setPassword("");
         setIsEditing(true);
         setShowVerify(false);
         setVerifyPassword("");
-        setVerifyContact("");
+        // 스크롤 복원 후 수정 모달을 열기 위해 짧은 딜레이 추가
+        setTimeout(() => {
+          setShowWrite(true);
+        }, 50);
       }
     } else {
-      alert("비밀번호 또는 연락처가 일치하지 않습니다.");
+      alert("비밀번호가 일치하지 않습니다.");
     }
-  };
-
-  // 연락처 마스킹 함수
-  const maskContact = (contact: string) => {
-    if (!contact || contact.length < 4) return contact;
-    return contact.slice(0, -4) + "****";
   };
 
   return (
     <div className="py-12 px-4">
-      <h2 className="text-2xl font-bold mb-6 text-center">방명록</h2>
+      <p className="text-xs text-center text-primary-500 tracking-[0.2em]">
+        GEUSTBOOK
+      </p>
+      <h2 className="text-2xl font-semibold mb-6 text-center text-primary-500">
+        방명록
+      </h2>
 
-      {/* 방명록 작성 폼 */}
-      <form
-        onSubmit={handleSubmit}
-        className="mb-8 bg-white rounded-lg shadow-md p-6"
+      {/* 가로 스와이프 카드 리스트 */}
+      <Swiper
+        modules={[FreeMode]}
+        freeMode
+        slidesPerView="auto"
+        spaceBetween={10}
+        className="books-swiper"
       >
-        <div className="mb-4">
-          <label htmlFor="name" className="block text-sm font-medium mb-1">
-            이름
-          </label>
-          <input
-            type="text"
-            id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            required
-          />
-        </div>
-
-        <div className="mb-4">
-          <label htmlFor="contact" className="block text-sm font-medium mb-1">
-            연락처
-          </label>
-          <input
-            type="text"
-            id="contact"
-            value={contact}
-            onChange={(e) => setContact(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            required
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            * 수정/삭제 시 필요합니다
-          </p>
-        </div>
-
-        <div className="mb-4">
-          <label htmlFor="password" className="block text-sm font-medium mb-1">
-            비밀번호
-          </label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            required
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            * 수정/삭제 시 필요합니다
-          </p>
-        </div>
-
-        <div className="mb-4">
-          <label htmlFor="content" className="block text-sm font-medium mb-1">
-            내용
-          </label>
-          <textarea
-            id="content"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            rows={4}
-            required
-          />
-        </div>
-
-        <button
-          type="submit"
-          className="w-full bg-pink-500 text-white py-2 rounded-md hover:bg-pink-600 transition-colors"
-        >
-          {isEditing ? "수정하기" : "등록하기"}
-        </button>
-      </form>
-
-      {/* 방명록 목록 */}
-      <div className="space-y-4">
         {entries.map((entry) => (
-          <div key={entry.id} className="bg-white rounded-lg shadow-md p-4">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="font-bold">{entry.name}</h3>
-              <div className="text-sm text-gray-500">
-                {new Date(entry.createdAt).toLocaleDateString()}
+          <SwiperSlide
+            key={entry.id}
+            style={{ width: "165px", height: "240px" }}
+          >
+            <div
+              className="b bg-white overflow-hidden flex flex-col"
+              style={{
+                width: "165px",
+                height: "240px",
+                borderRadius: "5px",
+                boxShadow: "1px 1px 2px rgba(0, 0, 0, 0.05)",
+                textAlign: "center",
+                color: "#333",
+                fontSize: "12px",
+                lineHeight: "1.7",
+                WebkitTextStroke: "0.2px",
+                transform: "translateZ(0)",
+                backfaceVisibility: "hidden",
+              }}
+            >
+              <p className="top w-full flex justify-center bg-primary-100">
+                <img
+                  src="/images/icons/rose.png"
+                  alt="decor"
+                  className="h-10 object-contain py-1"
+                />
+              </p>
+              <div className="flex-1 flex flex-col justify-between bg-primary-100 gap-2">
+                <p className="h-full px-3 py-2 text-[12px] text-[#333] leading-[1.7] line-clamp-4">
+                  {entry.content}
+                </p>
+                <div className="bottom px-3 pb-2 text-center">
+                  <span className="from text-[12px] text-secondary">
+                    - {entry.name} -
+                  </span>
+                  <div className="mt-2 flex items-center justify-between text-[10px] text-gray-400">
+                    <span>
+                      {new Date(entry.createdAt).toLocaleDateString()}
+                    </span>
+                    <div className="space-x-2">
+                      <button
+                        onClick={() => startEdit(entry)}
+                        className="hover:underline text-blue-500"
+                      >
+                        수정
+                      </button>
+                      <button
+                        onClick={() => confirmDelete(entry.id)}
+                        className="hover:underline text-red-500"
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-            <p className="text-sm text-gray-600 mb-2">
-              {maskContact(entry.contact)}
-            </p>
-            <p className="mb-4">{entry.content}</p>
-            <div className="flex justify-end space-x-2 text-sm">
-              <button
-                onClick={() => startEdit(entry)}
-                className="text-blue-500 hover:underline"
-              >
-                수정
-              </button>
-              <button
-                onClick={() => confirmDelete(entry.id)}
-                className="text-red-500 hover:underline"
-              >
-                삭제
-              </button>
-            </div>
-          </div>
+          </SwiperSlide>
         ))}
 
-        {entries.length === 0 && (
-          <p className="text-center text-gray-500 py-8">
-            아직 방명록이 없습니다. 첫 번째 메시지를 남겨보세요!
-          </p>
-        )}
-      </div>
+        {/* 작성하기 타일 */}
+        <SwiperSlide style={{ width: "165px", height: "240px" }}>
+          <button
+            type="button"
+            aria-label="방명록 작성하기"
+            onClick={() => {
+              setIsEditing(false);
+              setCurrentId("");
+              setName("");
+              setPassword("");
+              setContent("");
+              setShowWrite(true);
+            }}
+            className="b bg-white hover:bg-gray-50 active:scale-[0.98] transition-all flex items-center justify-center"
+            style={{
+              display: "flex",
+              width: "165px",
+              height: "240px",
+              borderRadius: "5px",
+              boxShadow: "1px 1px 2px rgba(0, 0, 0, 0.05)",
+              textAlign: "center",
+              color: "#333",
+              fontSize: "12px",
+              border: "1px dashed rgba(178, 112, 133, 0.3)",
+              transform: "translateZ(0)",
+              backfaceVisibility: "hidden",
+            }}
+          >
+            <span className="text-center leading-snug">
+              <FaPencilAlt className="text-xs mb-1 mx-auto text-primary-500" />
+              <span className="block font-semibold text-xs text-primary-500">
+                방명록 작성하기
+              </span>
+            </span>
+          </button>
+        </SwiperSlide>
+      </Swiper>
+
+      {entries.length === 0 && (
+        <p className="text-center text-xs text-gray-500 py-8">
+          아직 방명록이 없습니다. 첫 번째 메시지를 남겨보세요!
+        </p>
+      )}
+
+      {/* 모두보기 버튼 */}
+      {entries.length > 0 && (
+        <div className="flex justify-end mt-4">
+          <button
+            onClick={() => setShowAllEntries(true)}
+            className="text-xs text-gray-400 hover:text-gray-900"
+          >
+            전체보기 →
+          </button>
+        </div>
+      )}
 
       {/* 비밀번호 확인 모달 */}
       {showVerify && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000]">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md text-gray-900">
             <h3 className="text-lg font-bold mb-4">
               {actionType === "delete" ? "방명록 삭제" : "방명록 수정"}
             </h3>
             <p className="mb-4 text-sm">
-              본인 확인을 위해 연락처와 비밀번호를 입력해주세요.
+              본인 확인을 위해 비밀번호를 입력해주세요.
             </p>
 
-            <div className="mb-4">
-              <label
-                htmlFor="verifyContact"
-                className="block text-sm font-medium mb-1"
-              >
-                연락처
-              </label>
-              <input
-                type="text"
-                id="verifyContact"
-                value={verifyContact}
-                onChange={(e) => setVerifyContact(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              />
-            </div>
+            {/* 연락처 입력 제거 */}
 
             <div className="mb-6">
               <label
                 htmlFor="verifyPassword"
-                className="block text-sm font-medium mb-1"
+                className="block text-sm font-medium mb-1 text-gray-700"
               >
                 비밀번호
               </label>
@@ -313,7 +364,7 @@ export default function Guestbook() {
                 id="verifyPassword"
                 value={verifyPassword}
                 onChange={(e) => setVerifyPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-400"
               />
             </div>
 
@@ -322,7 +373,6 @@ export default function Guestbook() {
                 onClick={() => {
                   setShowVerify(false);
                   setVerifyPassword("");
-                  setVerifyContact("");
                 }}
                 className="px-4 py-2 border border-gray-300 rounded-md"
               >
@@ -334,6 +384,173 @@ export default function Guestbook() {
               >
                 확인
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 작성하기 오버레이 폼 */}
+      {showWrite && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000]">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md text-gray-900">
+            <h3 className="text-lg font-bold mb-4">
+              {isEditing ? "방명록 수정" : "방명록 작성"}
+            </h3>
+            <form onSubmit={handleSubmit}>
+              <div className="mb-4">
+                <label
+                  htmlFor="name"
+                  className="block text-sm font-medium mb-1 text-gray-700"
+                >
+                  이름
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-400"
+                  required
+                />
+              </div>
+
+              {/* 연락처 입력 제거 */}
+
+              <div className="mb-4">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium mb-1 text-gray-700"
+                >
+                  비밀번호
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-400"
+                  required={!isEditing}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  * 수정/삭제 시 필요합니다
+                </p>
+              </div>
+
+              <div className="mb-4">
+                <label
+                  htmlFor="content"
+                  className="block text-sm font-medium mb-1 text-gray-700"
+                >
+                  내용
+                </label>
+                <textarea
+                  id="content"
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-400"
+                  rows={4}
+                  required
+                />
+              </div>
+
+              <div className="flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setShowWrite(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-md"
+                >
+                  취소
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-pink-500 text-white rounded-md hover:bg-pink-600"
+                >
+                  {isEditing ? "수정하기" : "등록하기"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 전체 방명록 보기 오버레이 */}
+      {showAllEntries && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-[1000]">
+          <div className="bg-white w-full h-screen flex flex-col">
+            {/* 헤더 */}
+            <div className="relative flex items-center justify-center p-4 border-b">
+              <h3 className="text-base text-gray-900">
+                방명록 (축하 글) 전체보기
+              </h3>
+              <button
+                onClick={() => setShowAllEntries(false)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xl leading-none w-4 h-4 flex items-center justify-center"
+                aria-label="닫기"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* 방명록 리스트 */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="space-y-4">
+                {entries.map((entry) => (
+                  <div
+                    key={entry.id}
+                    className="bg-primary-50 rounded-lg p-5 border border-primary-200"
+                  >
+                    {/* 상단: 아이콘 */}
+                    <div className="flex justify-center mb-3">
+                      <img
+                        src="/images/icons/rose.png"
+                        alt="decor"
+                        className="h-8 object-contain"
+                      />
+                    </div>
+
+                    {/* 내용 */}
+                    <p className="text-sm text-gray-800 leading-relaxed mb-4 whitespace-pre-wrap break-words">
+                      {entry.content}
+                    </p>
+
+                    {/* 하단: 작성자 정보 */}
+                    <div className="flex items-center justify-between pt-3 border-t border-primary-200">
+                      <span className="text-sm font-semibold text-secondary">
+                        - {entry.name} -
+                      </span>
+                      <div className="flex items-center gap-3 text-xs text-gray-400">
+                        <span>
+                          {new Date(entry.createdAt).toLocaleDateString()}
+                        </span>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              setShowAllEntries(false);
+                              setTimeout(() => {
+                                startEdit(entry);
+                              }, 100);
+                            }}
+                            className="hover:underline text-blue-500"
+                          >
+                            수정
+                          </button>
+                          <button
+                            onClick={() => {
+                              setShowAllEntries(false);
+                              setTimeout(() => {
+                                confirmDelete(entry.id);
+                              }, 100);
+                            }}
+                            className="hover:underline text-red-500"
+                          >
+                            삭제
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>

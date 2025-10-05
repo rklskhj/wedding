@@ -14,7 +14,7 @@ export default function ShareSection({
   onCopyUrl,
 }: ShareSectionProps) {
   return (
-    <section className="py-8 px-4 border-t border-gray-200">
+    <section className="pt-8 px-4 border-t border-gray-200">
       <div className="flex justify-center w-full">
         <Button
           onClick={onShareKakao}

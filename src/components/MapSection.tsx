@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MapInfo } from "../types";
 import Image from "next/image";
 
@@ -104,10 +104,22 @@ export default function MapSection({
   onCopyAddress,
 }: MapSectionProps) {
   const mapRef = useRef<HTMLDivElement>(null);
+  const [mapError, setMapError] = useState<string | null>(null);
   const { title, address, latitude, longitude } = mapInfo;
 
   // 네이버 지도 초기화
   useEffect(() => {
+    // API 키 검증
+    const apiKey = process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID;
+    if (!apiKey) {
+      const errorMsg = "NAVER Maps API 키가 설정되지 않았습니다.";
+      console.error(
+        `${errorMsg} .env.local 파일에 NEXT_PUBLIC_NAVER_MAP_CLIENT_ID를 추가해주세요.`
+      );
+      setMapError(errorMsg);
+      return;
+    }
+
     // 네이버 맵 스크립트 로드
     const loadNaverMap = () => {
       if (window.naver) {
@@ -118,16 +130,26 @@ export default function MapSection({
       const script = document.createElement("script");
       // 최신 가이드: oapi 도메인 + ncpKeyId 파라미터 사용
       // 참고: https://navermaps.github.io/maps.js.ncp/docs/tutorial-2-Getting-Started.html
-      script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID}`;
+      script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${apiKey}`;
       script.async = true;
       script.onload = () => initializeMap();
+      script.onerror = () => {
+        const errorMsg = "지도를 불러올 수 없습니다.";
+        console.error(
+          "NAVER Maps 스크립트 로드 실패. API 키 또는 네트워크 상태를 확인해주세요."
+        );
+        setMapError(errorMsg);
+      };
+
       // 인증 실패 디버깅 훅 (문서 제공 전역 함수)
       (
         window as unknown as { navermap_authFailure?: () => void }
       ).navermap_authFailure = () => {
+        const errorMsg = "지도 인증에 실패했습니다.";
         console.error(
-          "NAVER Maps auth failure: 키 또는 등록된 Origin을 확인하세요."
+          "NAVER Maps 인증 실패: API 키 또는 등록된 도메인을 확인해주세요."
         );
+        setMapError(errorMsg);
       };
       document.head.appendChild(script);
     };
@@ -268,7 +290,19 @@ export default function MapSection({
   return (
     <div className="bg-white">
       {/* 지도 */}
-      <div ref={mapRef} className="w-full h-80 overflow-hidden"></div>
+      <div ref={mapRef} className="w-full h-80 overflow-hidden relative">
+        {mapError && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 text-gray-600">
+            <div className="text-center p-4">
+              <div className="text-4xl mb-2">🗺️</div>
+              <p className="text-sm font-medium mb-2">{mapError}</p>
+              <p className="text-xs text-gray-500">
+                아래 지도 앱 버튼을 이용해주세요
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
 
       <div className="pt-8 pb-4 px-4">
         <p className="font-medium text-lg text-primary text-center mb-2 whitespace-pre-line">

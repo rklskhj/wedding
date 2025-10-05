@@ -10,7 +10,7 @@ export default function TransportSection({
   transportInfo,
 }: TransportSectionProps) {
   return (
-    <section className="py-8 px-4 bg-white">
+    <section className="pt-8 px-4 bg-white">
       {/* Subway */}
       <div className="mb-4 pb-4 border-b border-primary">
         <h3 className="font-medium text-secondary mb-2">🚃 지하철</h3>

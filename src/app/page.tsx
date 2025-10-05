@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { MapInfo } from "../types";
 
 // 분리된 섹션 컴포넌트들 가져오기
@@ -13,6 +13,8 @@ import AccountSection from "../components/sections/AccountSection";
 import ShareSection from "../components/sections/ShareSection";
 import FooterSection from "../components/sections/FooterSection";
 import CountdownSection from "../components/sections/CountdownSection";
+import ThankyouSection from "../components/sections/ThankyouSection";
+import Guestbook from "../components/Guestbook";
 import { ScrollTopButton } from "@/components/ScrollTopButton";
 import SplashOverlay from "@/components/SplashOverlay";
 
@@ -122,6 +124,24 @@ export default function Home() {
 
   // 로딩 상태 관리
   const [isLoading, setIsLoading] = useState(true);
+  // 초기 스크롤 초기화 여부 추적
+  const hasScrolledToTop = useRef(false);
+
+  // 페이지 로드 시 한 번만 스크롤을 최상단으로 이동
+  useEffect(() => {
+    // 브라우저의 자동 스크롤 복원 비활성화
+    if (
+      typeof window !== "undefined" &&
+      "scrollRestoration" in window.history
+    ) {
+      window.history.scrollRestoration = "manual";
+    }
+
+    if (!hasScrolledToTop.current) {
+      window.scrollTo(0, 0);
+      hasScrolledToTop.current = true;
+    }
+  }, []);
 
   // 계좌번호 복사 함수
   const copyToClipboard = (text: string) => {
@@ -270,7 +290,7 @@ export default function Home() {
         {/* 카운트다운 섹션 */}
         <CountdownSection
           targetDate="2025-11-09T14:00:00+09:00"
-          coupleName="혁진, 진솔"
+          coupleName="혁진🩷진솔"
         />
         {/* 장소 섹션 */}
         <MapSection mapInfo={mapInfo} onCopyAddress={copyAddressToClipboard} />
@@ -278,13 +298,18 @@ export default function Home() {
         {/* 교통 정보 섹션 */}
         <TransportSection transportInfo={transportInfo} />
 
+        {/* 방명록 섹션 */}
+        <Guestbook />
+
         {/* 계좌번호 섹션 */}
         <AccountSection accounts={accounts} onCopy={copyToClipboard} />
 
-        {/* 공유하기 섹션 */}
-        <ShareSection onShareKakao={shareKakao} onCopyUrl={copyInvitationUrl} />
         {/* 스크롤 탑 버튼 */}
         <ScrollTopButton />
+        {/* 땡큐 섹션 */}
+        <ThankyouSection />
+        {/* 공유하기 섹션 */}
+        <ShareSection onShareKakao={shareKakao} onCopyUrl={copyInvitationUrl} />
         {/* 푸터 */}
         <FooterSection />
       </div>

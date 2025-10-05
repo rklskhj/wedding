@@ -2,10 +2,11 @@
 export interface GuestbookEntry {
   id: string;
   name: string;
-  contact: string;
   content: string;
-  password: string;
+  password: string; // SHA-256 hashed
   createdAt: number;
+  updatedAt?: number;
+  contact?: string; // deprecated
 }
 
 // 이미지 갤러리 타입 정의

@@ -9,7 +9,7 @@ const notoSansKR = Noto_Sans_KR({
 });
 
 export const metadata: Metadata = {
-  title: "김혁진과 신진솔 결혼식에 초대합니다. 🤵🏻‍♂️👰🏻‍♀️",
+  title: "김혁진❤️신진솔 결혼식에 초대합니다. 🤵🏻‍♂️👰🏻‍♀️",
   description:
     "우리 결혼해요! 2025.11.09 SUN 02:00PM | 강서 더뉴컨벤션 1층 르노브홀",
 };

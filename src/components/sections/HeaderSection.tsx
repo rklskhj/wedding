@@ -19,10 +19,15 @@ interface HeaderSectionProps {
 
 export default function HeaderSection({ weddingInfo }: HeaderSectionProps) {
   const stickyContainerRef = useRef<HTMLDivElement>(null);
+  const handImagesRef = useRef<HTMLDivElement>(null);
+
   const { scrollYProgress } = useScroll({
     target: stickyContainerRef,
     offset: ["start start", "end start"],
   });
+
+  // hand 이미지들을 위한 스크롤 진행도 추적
+  // (개별 in-view 트리거로 전환하여 전역 진행도는 사용하지 않음)
   // 전역 스크롤 속도로 페이드 가속 제어
   const { scrollY } = useScroll();
   const scrollVelocity = useVelocity(scrollY);
@@ -59,6 +64,25 @@ export default function HeaderSection({ weddingInfo }: HeaderSectionProps) {
     damping: 20,
     mass: 0.3,
   });
+
+  // hand 이미지들의 개별 애니메이션 값 (각각 20% 간격으로 등장)
+  const handImages = [
+    { src: "/images/hand-1.png", alt: "hand-1" },
+    { src: "/images/hand-2.png", alt: "hand-2" },
+    { src: "/images/hand-3.png", alt: "hand-3" },
+    { src: "/images/hand-4.png", alt: "hand-4" },
+    { src: "/images/hand-5.png", alt: "hand-5" },
+  ];
+
+  // hand 이미지용 개별 in-view variants (아래에서 위로, 살짝 스케일업)
+  const handFadeUp: Variants = {
+    hidden: { opacity: 0, y: 80, scale: 0.95 },
+    show: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+    },
+  };
   // 이미지 구간: in-view 시 나타나고, 더 내려가면 유지, 위로 벗어날 때만 숨김(요소별 개별 제어)
   const firstBlockControls = useAnimationControls();
   const secondBlockControls = useAnimationControls();
@@ -247,13 +271,63 @@ export default function HeaderSection({ weddingInfo }: HeaderSectionProps) {
       </div>
       <div className="relative w-full">
         <Image
-          src="/images/l_img1.png"
+          src="/images/fill.webp"
           alt="wedding"
           width={1200}
           height={2000}
           sizes="100vw"
-          className="w-full h-auto object-contain"
+          style={{ width: "100%", height: "auto" }}
+          className="object-contain"
         />
+      </div>
+      <div
+        ref={handImagesRef}
+        className="bg-primary h-[48svh] w-full relative flex flex-col justify-center items-center gap-6 py-6 overflow-hidden"
+      >
+        {handImages.map((image, index) => {
+          // 인덱스 기반 스크롤 텀: 마지막 이미지가 확실히 트리거되도록 임계치 완화
+          const amountByIndex = [0.25, 0.3, 0.35, 0.4, 0.25];
+          const marginByIndex = [
+            "0px 0px 0% 0px",
+            "0px 0px 0% 0px",
+            "0px 0px 0% 0px",
+            "0px 0px 0% 0px",
+            "0px 0px 0% 0px",
+          ];
+          const viewportAmount = amountByIndex[index] ?? 0.3;
+          const viewportMargin = marginByIndex[index] ?? "0px 0px 0% 0px";
+          return (
+            <motion.div
+              key={image.alt}
+              variants={handFadeUp}
+              initial="hidden"
+              whileInView="show"
+              viewport={{
+                once: true,
+                amount: viewportAmount,
+                margin: viewportMargin,
+              }}
+              transition={{
+                type: "spring",
+                stiffness: 60,
+                damping: 32,
+                mass: 1.2,
+                delay: index * 0.36,
+              }}
+              className="relative"
+            >
+              <Image
+                src={image.src}
+                alt={image.alt}
+                width={300}
+                height={200}
+                style={{ width: "auto", height: "22px" }}
+                className="object-contain drop-shadow-lg"
+                priority={index === 0}
+              />
+            </motion.div>
+          );
+        })}
       </div>
 
       {/* 이미지 */}
@@ -264,7 +338,8 @@ export default function HeaderSection({ weddingInfo }: HeaderSectionProps) {
           width={1200}
           height={2000}
           sizes="100vw"
-          className="w-full h-auto object-contain"
+          style={{ width: "100%", height: "auto" }}
+          className="object-contain"
         />
       </div>
     </section>

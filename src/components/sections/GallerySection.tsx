@@ -97,6 +97,7 @@ export default function GallerySection({ images, title }: GallerySectionProps) {
                 fill
                 sizes="33vw"
                 className="object-cover transition-transform duration-300"
+                unoptimized
               />
               <div className="pointer-events-none absolute inset-0 bg-black/40 opacity-0 md:group-hover:opacity-100 transition-opacity duration-300" />
             </div>
