@@ -516,7 +516,7 @@ export default function Guestbook() {
                     {/* 하단: 작성자 정보 */}
                     <div className="flex items-center justify-between pt-3 border-t border-primary-200">
                       <span className="text-sm font-semibold text-secondary">
-                        - {entry.name} -
+                        from. {entry.name}
                       </span>
                       <div className="flex items-center gap-3 text-xs text-gray-400">
                         <span>
