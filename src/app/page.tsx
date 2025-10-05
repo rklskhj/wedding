@@ -26,7 +26,7 @@ export default function Home() {
     date: "2025.11.09",
     day: "SUN",
     time: "02:00PM",
-    location: "by. HJ & JS",
+    location: "made by. HJ & JS",
     address: "서울특별시 강서구 공항대로36길 57",
     groomParents: {
       father: "김영복",
