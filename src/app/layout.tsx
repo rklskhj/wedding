@@ -12,6 +12,29 @@ export const metadata: Metadata = {
   title: "김혁진❤️신진솔 결혼식에 초대합니다. 🤵🏻‍♂️👰🏻‍♀️",
   description:
     "우리 결혼해요! 2025.11.09 SUN 02:00PM | 강서 더뉴컨벤션 1층 르노브홀",
+  openGraph: {
+    title: "김혁진❤️신진솔 결혼식에 초대합니다. 🤵🏻‍♂️👰🏻‍♀️",
+    description:
+      "우리 결혼해요! 2025.11.09 SUN 02:00PM | 강서 더뉴컨벤션 1층 르노브홀",
+    images: [
+      {
+        url: "https://res.cloudinary.com/dckkqaxqm/image/upload/fl_preserve_transparency/v1759648113/we_so6um5.jpg?_s=public-apps",
+        width: 1200,
+        height: 630,
+        alt: "김혁진❤️신진솔 결혼식 초대",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "김혁진❤️신진솔 결혼식에 초대합니다. 🤵🏻‍♂️👰🏻‍♀️",
+    description:
+      "우리 결혼해요! 2025.11.09 SUN 02:00PM | 강서 더뉴컨벤션 1층 르노브홀",
+    images: [
+      "https://res.cloudinary.com/dckkqaxqm/image/upload/fl_preserve_transparency/v1759648113/we_so6um5.jpg?_s=public-apps",
+    ],
+  },
 };
 
 export default function RootLayout({
