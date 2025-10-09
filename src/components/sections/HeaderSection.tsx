@@ -74,6 +74,16 @@ export default function HeaderSection({ weddingInfo }: HeaderSectionProps) {
     { src: "/images/hand-5.png", alt: "hand-5" },
   ];
 
+  // hand 컨테이너 variants
+  const handContainer: Variants = {
+    hidden: {},
+    show: {
+      transition: {
+        staggerChildren: 0.15,
+      },
+    },
+  };
+
   // hand 이미지용 개별 in-view variants (아래에서 위로, 살짝 스케일업)
   const handFadeUp: Variants = {
     hidden: { opacity: 0, y: 80, scale: 0.95 },
@@ -81,6 +91,12 @@ export default function HeaderSection({ weddingInfo }: HeaderSectionProps) {
       opacity: 1,
       y: 0,
       scale: 1,
+      transition: {
+        type: "spring",
+        stiffness: 60,
+        damping: 32,
+        mass: 1.2,
+      },
     },
   };
   // 이미지 구간: in-view 시 나타나고, 더 내려가면 유지, 위로 벗어날 때만 숨김(요소별 개별 제어)
@@ -280,40 +296,19 @@ export default function HeaderSection({ weddingInfo }: HeaderSectionProps) {
           className="object-contain"
         />
       </div>
-      <div
+      <motion.div
         ref={handImagesRef}
         className="bg-primary h-[48svh] w-full relative flex flex-col justify-center items-center gap-6 py-6 overflow-hidden"
+        variants={handContainer}
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, amount: 0.2 }}
       >
         {handImages.map((image, index) => {
-          // 인덱스 기반 스크롤 텀: 마지막 이미지가 확실히 트리거되도록 임계치 완화
-          const amountByIndex = [0.25, 0.3, 0.35, 0.4, 0.25];
-          const marginByIndex = [
-            "0px 0px 0% 0px",
-            "0px 0px 0% 0px",
-            "0px 0px 0% 0px",
-            "0px 0px 0% 0px",
-            "0px 0px 0% 0px",
-          ];
-          const viewportAmount = amountByIndex[index] ?? 0.3;
-          const viewportMargin = marginByIndex[index] ?? "0px 0px 0% 0px";
           return (
             <motion.div
               key={image.alt}
               variants={handFadeUp}
-              initial="hidden"
-              whileInView="show"
-              viewport={{
-                once: true,
-                amount: viewportAmount,
-                margin: viewportMargin,
-              }}
-              transition={{
-                type: "spring",
-                stiffness: 60,
-                damping: 32,
-                mass: 1.2,
-                delay: index * 0.36,
-              }}
               className="relative"
             >
               <Image
@@ -328,7 +323,7 @@ export default function HeaderSection({ weddingInfo }: HeaderSectionProps) {
             </motion.div>
           );
         })}
-      </div>
+      </motion.div>
 
       {/* 이미지 */}
       <div className="relative w-full">

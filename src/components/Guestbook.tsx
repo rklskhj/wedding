@@ -214,7 +214,7 @@ export default function Guestbook() {
         방명록
       </h2>
 
-      {/* 가로 스와이프 카드 리스트 */}
+      {/* 가로 스와이프 카드 리스트 - 최대 4개만 표시 */}
       <Swiper
         modules={[FreeMode]}
         freeMode
@@ -222,7 +222,7 @@ export default function Guestbook() {
         spaceBetween={10}
         className="books-swiper"
       >
-        {entries.map((entry) => (
+        {entries.slice(0, 4).map((entry) => (
           <SwiperSlide
             key={entry.id}
             style={{ width: "165px", height: "240px" }}
@@ -250,8 +250,8 @@ export default function Guestbook() {
                   className="h-10 object-contain py-1"
                 />
               </p>
-              <div className="flex-1 flex flex-col justify-between bg-primary-100 gap-2">
-                <p className="h-full px-3 py-2 text-[12px] text-[#333] leading-[1.7] line-clamp-4">
+              <div className="flex-1 flex flex-col justify-between bg-primary-100 gap-3">
+                <p className="px-3 pt-2 text-[12px] text-[#333] leading-[1.5] line-clamp-[7] overflow-hidden flex-1">
                   {entry.content}
                 </p>
                 <div className="bottom px-3 pb-2 text-end">
@@ -296,7 +296,7 @@ export default function Guestbook() {
               setContent("");
               setShowWrite(true);
             }}
-            className="b bg-white hover:bg-gray-50 active:scale-[0.98] transition-all flex items-center justify-center"
+            className="b bg-white active:scale-[0.98] transition-all flex items-center justify-center"
             style={{
               display: "flex",
               width: "165px",
@@ -327,9 +327,22 @@ export default function Guestbook() {
         </p>
       )}
 
-      {/* 모두보기 버튼 */}
+      {/* 전체보기 & 방명록 작성 버튼 */}
       {entries.length > 0 && (
-        <div className="flex justify-end mt-4">
+        <div className="flex justify-end items-center gap-3 mt-4">
+          <button
+            onClick={() => {
+              setIsEditing(false);
+              setCurrentId("");
+              setName("");
+              setPassword("");
+              setContent("");
+              setShowWrite(true);
+            }}
+            className="text-xs text-primary-500 hover:text-primary-700 font-medium"
+          >
+            작성하기
+          </button>
           <button
             onClick={() => setShowAllEntries(true)}
             className="text-xs text-gray-400 hover:text-gray-900"
@@ -492,7 +505,7 @@ export default function Guestbook() {
             </div>
 
             {/* 방명록 리스트 */}
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-6 pb-28">
               <div className="space-y-4">
                 {entries.map((entry) => (
                   <div
